@@ -131,24 +131,14 @@ class Rook(Piece):
         """
 
         destList = []
+        
+        destList.extend(self.getMovesInLine(lambda i, j : (i+1, j), board))
 
-        print(board[self.position[0], self.position[1]])
+        destList.extend(self.getMovesInLine(lambda i, j : (i, j+1), board))
 
-        destList.extend(board[(1,2)])
+        destList.extend(self.getMovesInLine(lambda i, j : (i-1, j), board))
 
-        destList.extend(board[self.position[0]:, self.position[1]])
-
-        destList.extend(board[self.position[0], :self.position[1]])
-
-        destList.extend(board[:self.position[0], self.position[1]::])
-
-        # destList.extend(self.getMovesInLine(lambda i, j : (i+1, j), board))
-
-        # destList.extend(self.getMovesInLine(lambda i, j : (i, j+1), board))
-
-        # destList.extend(self.getMovesInLine(lambda i, j : (i-1, j), board))
-
-        # destList.extend(self.getMovesInLine(lambda i, j : (i, j-1), board))
+        destList.extend(self.getMovesInLine(lambda i, j : (i, j-1), board))
         
         return destList
 
