@@ -19,6 +19,16 @@ def _positivePos(func):
             return False
     return wrapper
 
+
+def infiRange(self, start, stop=False, step=1):
+    i = start
+    while True:
+        if not stop and stop == i:
+            break
+        yield i
+        i += step
+
+
 def convPosition(func):
     def wrapper(instance, *args, **kwargs):
         if isinstance(pos, string):

@@ -302,6 +302,5 @@ def init_4P(*rules):
 
 if __name__ == "__main__":
 
-    obj = init_4P()
-    print(obj)
-    print(obj[0, 0:0])
+    thisBoard = Board(8,8, [])
+    print(thisBoard[1:3, 1:3])

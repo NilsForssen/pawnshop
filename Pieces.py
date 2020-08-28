@@ -1,4 +1,4 @@
-from Utils import _catchOutofBounce, _positivePos
+from Utils import _catchOutofBounce, _positivePos, infiRange
 
 _directions = {
     "up": ((-1,0), (-1,1), (-1,-1)),
@@ -30,13 +30,9 @@ class Piece():
         self._position = pos
 
 
-    def move(pos):
-        self.position = pos
+    def move(self, destPos):
+        self.position = destPos
         self.firstMove = False
-    
-
-    def getDest(self, off_x, off_y):
-        return (self._position[0] + off_x, self._position[1] + off_y)
 
 
     @_positivePos
@@ -54,34 +50,38 @@ class Piece():
         except AttributeError:
             return False
 
-
     @_positivePos
     @_catchOutofBounce
     def canMove(self, pos, board):
         destPiece = board[pos]
         try:
-            return destPiece.color != self.color
+            return destpiece.color != self.color
         except AttributeError:
-            return True
+            return board.isEmpty(pos)
 
 
-    def getMovesInLine(self, iterFunc, board, off_x0=0, off_y0=0):
+    def _getMovesInLine(self, rowOffsetIter=infiRange(0, step=0), colOffsetIter=infiRange(0, step=0), board):
 
         moveList = []
-        off_x, off_y = iterFunc(off_x0, off_y0)
-        dest = self.getDest(off_x, off_y)
-
-        while self.canWalk(dest, board):
-            moveList.append(dest)
-            off_x, off_y = iterFunc(off_x, off_y)
-            dest = self.getDest(off_x, off_y)
-
-        if self.canCapture(dest, board):
-            moveList.append(dest)
+        
+        while True:
+            
+            try:
+                pos = (self.position[0] + next(rowOffsetIter), self.position[1] + next(colOff))
+            except StopIteration:
+                break
+            
+            if self.canWalk(pos):
+                moveList.append(pos)
+            elif self.canCapture(pos):
+                moveList.append(pos)
+                break
+            else:
+                break
 
         return moveList
 
-
+        
 class Pawn(Piece):
     def __init__(self, color, direction="up"):
         super().__init__(color, 1, "P")
