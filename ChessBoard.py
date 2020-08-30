@@ -79,9 +79,22 @@ class Board():
             elif not isinstance(self._board[row][col], _Empty):
                 self.removePiece(self._board[row][col])
 
-            self.addPiece(item[i], (row, col))
-
             self._board[row][col] = item[i]
+
+            print(item[i], (row, col))
+            print(self.pieceDict.values())
+
+            if len(self.pieceDict.values()) == 0:
+                self.addPiece(item[i], (row, col))
+            elif not isinstance(item[i], _Empty):
+                for pList in self.pieceDict.values():
+                    if item[i] not in pList:
+                        self.addPiece(item[i], (row, col))
+                        break
+
+                
+
+            
 
 
     def __getitem__(self, index): 
@@ -169,8 +182,6 @@ class Board():
 
         for piece, pos in pieceZip:
 
-            self.addPiece(piece, pos)
-
             self[pos] = piece
 
         self.checkForCheck()
@@ -184,20 +195,20 @@ class Board():
 
             hostilePieces = [piece for col, pList in self.pieceDict.items() if col != color for piece in pList]
 
-            checkFound = False
-
             for hp in hostilePieces:
-
-                if checkFound:
-                    break
 
                 hostile = hp.getMoves(self)
 
                 for alliedKing in self.kingDict[color]:
+
                     if alliedKing.position in hostile:
                         self.checkDict[color] = True
-                        checkFound = True
                         break
+                else:
+                    continue
+
+                break
+
             else:
                 self.checkDict[color] = False
 
@@ -213,7 +224,9 @@ class Board():
                         testBoard = deepcopy(self)
 
                         try:
+                            print(alliedPos, move)
                             testBoard.movePiece(alliedPos, move, raw=True, ignoreMate=True)
+
                         except Check:
                             pass
                         else:
@@ -230,7 +243,6 @@ class Board():
                     self.checkDict[color] = True
                     print(color + " in Checkmate!")
                     continue
-
 
                 self.checkDict[color] = True
                 print(color + " in Check!")
@@ -261,6 +273,7 @@ class Board():
                 notation += "x"
                 self.removePiece(self[targetPos])
             else:
+                print("position", startPos, targetPos)
                 self[startPos], self[targetPos] = self[targetPos], self[startPos]
 
             piece.move(targetPos)

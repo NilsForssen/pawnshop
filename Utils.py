@@ -20,7 +20,7 @@ def _positivePos(func):
     return wrapper
 
 
-def infiRange(self, start, stop=False, step=1):
+def infiRange(start, stop=False, step=1):
     i = start
     while True:
         if not stop and stop == i:

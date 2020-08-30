@@ -35,6 +35,10 @@ class Piece():
         self.firstMove = False
 
 
+    def getDest(self, offx, offy):
+        return (self.position[0] + offx, self.position[1] + offy)
+
+
     @_positivePos
     @_catchOutofBounce
     def canWalk(self, pos, board):
@@ -55,25 +59,25 @@ class Piece():
     def canMove(self, pos, board):
         destPiece = board[pos]
         try:
-            return destpiece.color != self.color
+            return destPiece.color != self.color
         except AttributeError:
             return board.isEmpty(pos)
 
 
-    def _getMovesInLine(self, rowOffsetIter=infiRange(0, step=0), colOffsetIter=infiRange(0, step=0), board):
+    def _getMovesInLine(self, board, rowIter=infiRange(0, step=0), colIter=infiRange(0, step=0)):
 
         moveList = []
         
         while True:
             
             try:
-                pos = (self.position[0] + next(rowOffsetIter), self.position[1] + next(colOff))
+                pos = self.getDest(next(rowIter), next(colIter))
             except StopIteration:
                 break
             
-            if self.canWalk(pos):
+            if self.canWalk(pos, board):
                 moveList.append(pos)
-            elif self.canCapture(pos):
+            elif self.canCapture(pos, board):
                 moveList.append(pos)
                 break
             else:
@@ -132,14 +136,14 @@ class Rook(Piece):
 
         destList = []
         
-        destList.extend(self.getMovesInLine(lambda i, j : (i+1, j), board))
+        destList.extend(self._getMovesInLine(board, rowIter=infiRange(1, step=1)))
 
-        destList.extend(self.getMovesInLine(lambda i, j : (i, j+1), board))
+        destList.extend(self._getMovesInLine(board, rowIter=infiRange(-1, step=-1)))
 
-        destList.extend(self.getMovesInLine(lambda i, j : (i-1, j), board))
+        destList.extend(self._getMovesInLine(board, colIter=infiRange(1, step=1)))
 
-        destList.extend(self.getMovesInLine(lambda i, j : (i, j-1), board))
-        
+        destList.extend(self._getMovesInLine(board, colIter=infiRange(-1, step=-1)))
+
         return destList
 
 
@@ -167,9 +171,9 @@ class Knight(Piece):
         (-2,1),
         (-2,-1)]
 
-        for offset in offsetList:
+        for offx, offy in offsetList:
             
-            dest = self.getDest(*offset)
+            dest = self.getDest(offx, offy)
             if self.canMove(dest, board):
                 destList.append(dest)
 
@@ -188,13 +192,13 @@ class Bishop(Piece):
 
         destList = []
 
-        destList.extend(self.getMovesInLine(lambda i, j : (i+1, j+1), board))
+        destList.extend(self._getMovesInLine(board, rowIter=infiRange(1, step=1), colIter=infiRange(1, step=1)))
 
-        destList.extend(self.getMovesInLine(lambda i, j : (i-1, j-1), board))
+        destList.extend(self._getMovesInLine(board, rowIter=infiRange(1, step=1), colIter=infiRange(-1, step=-1)))
 
-        destList.extend(self.getMovesInLine(lambda i, j : (i-1, j+1), board))
+        destList.extend(self._getMovesInLine(board, rowIter=infiRange(-1, step=-1), colIter=infiRange(1, step=1)))
 
-        destList.extend(self.getMovesInLine(lambda i, j : (i+1, j-1), board))
+        destList.extend(self._getMovesInLine(board, rowIter=infiRange(-1, step=-1), colIter=infiRange(-1, step=-1)))
 
         return destList
 
@@ -223,9 +227,9 @@ class King(Piece):
         (0,-1),
         (1,-1)]
 
-        for offset in offsetList:
+        for offx, offy in offsetList:
 
-            dest = self.getDest(*offset)
+            dest = self.getDest(offx, offy)
             if self.canMove(dest, board):
                 destList.append(dest)
 
@@ -244,21 +248,21 @@ class Queen(Piece):
 
         destList = []
 
-        destList.extend(self.getMovesInLine(lambda i, j : (i+1, j), board))
+        destList.extend(self._getMovesInLine(board, rowIter=infiRange(1, step=1)))
 
-        destList.extend(self.getMovesInLine(lambda i, j : (i, j+1), board))
+        destList.extend(self._getMovesInLine(board, rowIter=infiRange(-1, step=-1)))
 
-        destList.extend(self.getMovesInLine(lambda i, j : (i-1, j), board))
+        destList.extend(self._getMovesInLine(board, colIter=infiRange(1, step=1)))
 
-        destList.extend(self.getMovesInLine(lambda i, j : (i, j-1), board))
+        destList.extend(self._getMovesInLine(board, colIter=infiRange(-1, step=-1)))
 
-        destList.extend(self.getMovesInLine(lambda i, j : (i+1, j+1), board))
+        destList.extend(self._getMovesInLine(board, rowIter=infiRange(1, step=1), colIter=infiRange(1, step=1)))
 
-        destList.extend(self.getMovesInLine(lambda i, j : (i-1, j-1), board))
+        destList.extend(self._getMovesInLine(board, rowIter=infiRange(1, step=1), colIter=infiRange(-1, step=-1)))
 
-        destList.extend(self.getMovesInLine(lambda i, j : (i-1, j+1), board))
+        destList.extend(self._getMovesInLine(board, rowIter=infiRange(-1, step=-1), colIter=infiRange(1, step=1)))
 
-        destList.extend(self.getMovesInLine(lambda i, j : (i+1, j-1), board))
+        destList.extend(self._getMovesInLine(board, rowIter=infiRange(-1, step=-1), colIter=infiRange(-1, step=-1)))
 
         return destList
 
