@@ -81,20 +81,16 @@ class Board():
 
             self._board[row][col] = item[i]
 
-            print(item[i], (row, col))
-            print(self.pieceDict.values())
-
-            if len(self.pieceDict.values()) == 0:
-                self.addPiece(item[i], (row, col))
-            elif not isinstance(item[i], _Empty):
-                for pList in self.pieceDict.values():
-                    if item[i] not in pList:
-                        self.addPiece(item[i], (row, col))
-                        break
-
+            if not isinstance(item[i], _Empty):
                 
-
-            
+                if len(self.pieceDict.values()) == 0:
+                    self._addPiece(item[i], (row, col))
+                else:
+                    for pList in self.pieceDict.values():
+                        if item[i] not in pList:
+                            print(item[i])
+                            self._addPiece(item[i], (row, col))
+                            break               
 
 
     def __getitem__(self, index): 
@@ -137,7 +133,7 @@ class Board():
         return dict([(k, 0) for k in self.colorList])
 
 
-    def addPiece(self, piece, pos):
+    def _addPiece(self, piece, pos):
 
         if not piece.color in self.pieceDict:
             self.pieceDict[piece.color] = []
@@ -151,8 +147,6 @@ class Board():
             self.kingDict[piece.color].append(piece)
 
         piece.position = pos
-
-        self.checkForCheck()
 
 
     def removePiece(self, piece):
@@ -172,8 +166,6 @@ class Board():
             print("cant remove piece for some reason")
 
         piece.position = None
-
-        self.checkForCheck()
 
 
     def pieceSetup(self, pieceZip):
@@ -224,7 +216,6 @@ class Board():
                         testBoard = deepcopy(self)
 
                         try:
-                            print(alliedPos, move)
                             testBoard.movePiece(alliedPos, move, raw=True, ignoreMate=True)
 
                         except Check:
@@ -269,12 +260,17 @@ class Board():
 
             notation += piece.symbol
 
+            print("position", startPos, targetPos)
+
             if not isinstance(self[targetPos], _Empty):
                 notation += "x"
                 self.removePiece(self[targetPos])
             else:
-                print("position", startPos, targetPos)
-                self[startPos], self[targetPos] = self[targetPos], self[startPos]
+                print("inside")
+                p1 = self[startPos]
+                p2 = self[targetPos]
+                self[targetPos] = p1
+                self[startPos] = p2
 
             piece.move(targetPos)
 

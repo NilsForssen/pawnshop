@@ -13,17 +13,17 @@ def _catchOutofBounce(func):
 def _positivePos(func):
     def wrapper(pInstance, pos, bInstance):
 
-        if not pos[0] < 0 and not pos[0] < 0:
+        if not pos[0] < 0 and not pos[1] < 0:
             return func(pInstance, pos, bInstance)
         else:
             return False
     return wrapper
 
 
-def infiRange(start, stop=False, step=1):
+def infiRange(start, stop=None, step=1):
     i = start
     while True:
-        if not stop and stop == i:
+        if stop and stop == i:
             break
         yield i
         i += step
