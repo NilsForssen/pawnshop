@@ -44,7 +44,7 @@ class Board():
 
         for row in self._board:
             for piece in row:
-                string += piece.symbol + "\t"
+                string += piece.color[0] + piece.symbol + "\t"
             string += "\n\n"
 
         return string
@@ -76,21 +76,29 @@ class Board():
             if isinstance(self._board[row][col], _Disabled):
                 raise DisabledError("Position {0} of board is disabled and thus unavailible".format((row, col)))
 
-            elif not isinstance(self._board[row][col], _Empty):
-                self.removePiece(self._board[row][col])
+            item1 = self._board[row][col]
+            item2 = item[i]
 
-            self._board[row][col] = item[i]
+            self._board[row][col] = item2
 
-            if not isinstance(item[i], _Empty):
-                
-                if len(self.pieceDict.values()) == 0:
-                    self._addPiece(item[i], (row, col))
+            if not isinstance(item2, _Empty):
+
+                if isinstance(item1, _Empty):
+                    self._addPiece(item2, (row, col))
                 else:
-                    for pList in self.pieceDict.values():
-                        if item[i] not in pList:
-                            print(item[i])
-                            self._addPiece(item[i], (row, col))
-                            break               
+                    self.removePiece(item1)
+                    
+                    if len(self.pieceDict.values()) == 0:
+                        self._addPiece(item2, (row, col))
+                    else:
+                        for pList in self.pieceDict.values():
+                            if item2 not in pList:
+                                self._addPiece(item[i], (row, col))
+                                break
+                            
+            else:
+                
+                self.removePiece(item1)
 
 
     def __getitem__(self, index): 
@@ -114,7 +122,7 @@ class Board():
         except (TypeError, ValueError):
             raise ValueError("Index position must be 2-dimensional.") from None
 
-        if type(r) is not slice: r = slice(r, r+1)          #Maybe try -1 instead of +1
+        if type(r) is not slice: r = slice(r, r+1)
         if type(c) is not slice: c = slice(c, c+1)
 
         return r, c
@@ -255,22 +263,16 @@ class Board():
 
         if self.checkMateDict[piece.color]:
             raise CheckMate("{0} is Checkmated!".format(piece.color))
-
+        
         elif raw or targetPos in piece.getMoves(self):
 
             notation += piece.symbol
 
-            print("position", startPos, targetPos)
-
             if not isinstance(self[targetPos], _Empty):
                 notation += "x"
-                self.removePiece(self[targetPos])
+                self[startPos], self[targetPos] = _Empty(), self[startPos]
             else:
-                print("inside")
-                p1 = self[startPos]
-                p2 = self[targetPos]
-                self[targetPos] = p1
-                self[startPos] = p2
+                self[startPos], self[targetPos] = self[targetPos], self[startPos]
 
             piece.move(targetPos)
 

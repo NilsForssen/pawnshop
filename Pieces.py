@@ -17,7 +17,7 @@ class Piece():
 
 
     def __str__(self):
-        return self.symbol
+        return self.color[0] + self.symbol
 
 
     @property
@@ -269,7 +269,9 @@ class Queen(Piece):
 
 class _Disabled():
     symbol = " "
+    color = "0"
 
 
 class _Empty():
     symbol = "0"
+    color = "0"
