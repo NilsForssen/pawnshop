@@ -268,10 +268,10 @@ class Queen(Piece):
 
 
 class _Disabled():
-    symbol = " "
-    color = "0"
+    def __str__(self):
+        return " "
 
 
 class _Empty():
-    symbol = "0"
-    color = "0"
+    def __str__(self):
+        return "_"

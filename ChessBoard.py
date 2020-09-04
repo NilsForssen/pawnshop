@@ -1,4 +1,4 @@
-from copy import deepcopy
+from copy import deepcopy, copy
 from Pieces import King, _Disabled, _Empty
 from Exceptions import *
 """
@@ -44,7 +44,7 @@ class Board():
 
         for row in self._board:
             for piece in row:
-                string += piece.color[0] + piece.symbol + "\t"
+                string += str(piece) + "\t"
             string += "\n\n"
 
         return string
@@ -228,6 +228,7 @@ class Board():
 
                         except Check:
                             pass
+
                         else:
                             self.checkMateDict[color] = False
                             break
@@ -249,45 +250,47 @@ class Board():
 
     def movePiece(self, startPos, targetPos, raw=False, ignoreCheck=False, ignoreMate=False, *args, **kwargs):
 
-
-        allParams = locals()
-
-        allParams["board"] = allParams["self"]
-        del allParams["self"]
-
-        notation = ""
-
         piece = self[startPos]
+
         if isinstance(piece, _Empty):
             raise EmptyError("Given position {0} is empty".format(startPos))
 
         if self.checkMateDict[piece.color]:
             raise CheckMate("{0} is Checkmated!".format(piece.color))
         
-        elif raw or targetPos in piece.getMoves(self):
+        for board in (deepcopy(self), self):
 
-            notation += piece.symbol
+            allParams = locals()
+            allParams["board"] = allParams["self"]
+            del allParams["self"]
 
-            if not isinstance(self[targetPos], _Empty):
-                notation += "x"
-                self[startPos], self[targetPos] = _Empty(), self[startPos]
+            notation = ""
+
+            if raw or targetPos in piece.getMoves(board):
+
+                notation += piece.symbol
+
+                if not isinstance(board[targetPos], _Empty):
+                    notation += "x"
+                    board[startPos], board[targetPos] = _Empty(), board[startPos]
+                else:
+                    board[startPos], board[targetPos] = board[targetPos], board[startPos]
+
+                if not ignoreCheck:
+                    board.checkForCheck(ignoreMate=ignoreMate)
+                    if board.checkDict[piece.color]:
+                        raise Check("Cannot move piece at {0} to {1} as your king is threatened.".format(startPos, targetPos))
+
+                if board is self:
+                    piece.move(targetPos)
+                    
             else:
-                self[startPos], self[targetPos] = self[targetPos], self[startPos]
-
-            piece.move(targetPos)
-
-            if not ignoreCheck:
-                self.checkForCheck(ignoreMate=ignoreMate)
-                if self.checkDict[piece.color]:
-                    raise Check("Cannot move piece at {0} to {1} as your king is threatened.".format(startPos, targetPos))
-
-        else:
-            for rule in self.rules:
-                if rule.condition(**allParams):
-                    notation = rule.action(**allParams)
-                    break
-            else:
-                raise IllegalMove("Piece at {0} cannot move to {1}.".format(startPos, targetPos))
+                for rule in board.rules:
+                    if rule.condition(**allParams):
+                        notation = rule.action(**allParams)
+                        break
+                else:
+                    raise IllegalMove("Piece at {0} cannot move to {1}.".format(startPos, targetPos))
 
         return notation
 

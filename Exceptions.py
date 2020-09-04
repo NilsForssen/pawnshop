@@ -17,3 +17,7 @@ class EmptyError(IndexError):
 
 class DisabledError(IndexError):
     pass
+
+
+class UnsucessfulTest(Exception):
+	pass
