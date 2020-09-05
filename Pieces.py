@@ -269,9 +269,9 @@ class Queen(Piece):
 
 class _Disabled():
     def __str__(self):
-        return " "
+        return "  "
 
 
 class _Empty():
     def __str__(self):
-        return "_"
+        return "__"

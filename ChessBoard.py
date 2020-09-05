@@ -240,12 +240,8 @@ class Board():
 
                 else:
                     self.checkMateDict[color] = True
-                    self.checkDict[color] = True
-                    print(color + " in Checkmate!")
-                    continue
 
                 self.checkDict[color] = True
-                print(color + " in Check!")
 
 
     def movePiece(self, startPos, targetPos, raw=False, ignoreCheck=False, ignoreMate=False, *args, **kwargs):
@@ -255,13 +251,14 @@ class Board():
         if isinstance(piece, _Empty):
             raise EmptyError("Given position {0} is empty".format(startPos))
 
-        if self.checkMateDict[piece.color]:
+        if self.checkMateDict[piece.color] and not ignoreMate:
             raise CheckMate("{0} is Checkmated!".format(piece.color))
         
         for board in (deepcopy(self), self):
 
             allParams = locals()
-            allParams["board"] = allParams["self"]
+            allParams["board"]
+
             del allParams["self"]
 
             notation = ""
@@ -276,22 +273,39 @@ class Board():
                 else:
                     board[startPos], board[targetPos] = board[targetPos], board[startPos]
 
-                if not ignoreCheck:
-                    board.checkForCheck(ignoreMate=ignoreMate)
-                    if board.checkDict[piece.color]:
-                        raise Check("Cannot move piece at {0} to {1} as your king is threatened.".format(startPos, targetPos))
+                
 
                 if board is self:
                     piece.move(targetPos)
+                    board.checkForCheck()
+                elif not ignoreCheck:
+                    board.checkForCheck(ignoreMate=ignoreMate)
+                    if board.checkDict[piece.color]:
+                        raise Check("Cannot move piece at {0} to {1} as your king is threatened.".format(startPos, targetPos))
                     
             else:
                 for rule in board.rules:
                     if rule.condition(**allParams):
                         notation = rule.action(**allParams)
+                        if board is self:
+                            board.checkForCheck()
+                        elif not ignoreCheck:
+                            board.checkForCheck(ignoreMate=ignoreMate)
+                            if board.checkDict[piece.color]:
+                                raise Check("Move will result in your King being threatened and thus cannot be performed.")
+
                         break
                 else:
                     raise IllegalMove("Piece at {0} cannot move to {1}.".format(startPos, targetPos))
 
+
+
+        for color in self.checkDict.keys():
+            if self.checkMateDict[color] and not ignoreMate:
+                print(f"{color} in Checkmate!")
+
+            elif self.checkDict[color]:
+                print(f"{color} in Check!")
         return notation
 
 

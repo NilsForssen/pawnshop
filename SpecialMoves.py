@@ -57,6 +57,7 @@ class Castle_K(Move):
                 between = move.findBetween(startPos, targetPos)
 
                 for pos in between:
+
                     if not isinstance(board[pos], _Empty):
                         break
                 else:

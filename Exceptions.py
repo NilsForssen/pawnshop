@@ -19,5 +19,5 @@ class DisabledError(IndexError):
     pass
 
 
-class UnsucessfulTest(Exception):
+class UnsuccessfulTest(Exception):
 	pass
