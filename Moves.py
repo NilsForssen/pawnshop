@@ -21,6 +21,43 @@ class Move(ABC):
         """
         raise NotImplementedError("action() not yet implemented in rule.")
 
+    @classmethod
+    def finishMove(rule, startPiece, targetPos, **kwargs):
+        """
+        Move the piece instances
+
+        This method is called after action() has been validated
+        """
+        startPiece.move(targetPos)
+
+
+class Standard(Move):
+
+    @classmethod
+    def condition(rule, board, startPiece, targetPos, **kwargs):
+
+        returned = targetPos in startPiece.getMoves(board)
+
+        print(startPiece.position)
+
+        print(returned)
+        return returned
+
+    @classmethod
+    def action(rule, board, startPiece, targetPiece, startPos, targetPos, **kwargs):
+
+        notation = startPiece.symbol
+
+        if not isinstance(targetPiece, _Empty):
+            notation += "x"
+            board[startPos], board[targetPos] = _Empty(), startPiece
+        else:
+            board[startPos], board[targetPos] = targetPiece, startPiece
+
+        notation += str(targetPos)
+
+        return notation
+
 
 class Castle_K(Move):
 

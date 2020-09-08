@@ -1,10 +1,10 @@
 from ChessBoard import Board, init_4P, init_classic
-from SpecialMoves import *
+from Moves import *
 from Pieces import *
 
 def classic():
 
-    board = init_classic(Castle_K)
+    board = init_classic(Standard, Castle_K, Castle_Q)
 
     board.pieceSetup((
         (Rook("white"), (0,0)),
@@ -47,7 +47,7 @@ def classic():
 
 def four_player():
 
-    board = init_4P(Castle_K)
+    board = init_4P(Standard, Castle_K, Castle_Q)
 
     board.pieceSetup([
     Rook("yellow", (0,3)),
