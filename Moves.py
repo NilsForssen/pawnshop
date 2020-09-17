@@ -49,7 +49,9 @@ class Standard(Move):
 
         if not isinstance(targetPiece, _Empty):
             notation += "x"
+            board[startPos], board[targetPos] = _Empty(), board[startPos]
         else:
+            board[startPos], board[targetPos] = board[targetPos], board[startPos]
             pass
 
         notation += str(targetPos)
