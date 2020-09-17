@@ -221,10 +221,8 @@ class Board():
 
                     for move in self[alliedPos].getMoves(self):
 
-                        testBoard = deepcopy(self)
-
                         try:
-                            testBoard.movePiece(alliedPos, move, raw=True, ignoreMate=True)
+                            self.movePiece(alliedPos, move, raw=True, ignoreMate=True, testMove=True)
 
                         except Check:
                             pass
@@ -244,7 +242,7 @@ class Board():
                 self.checkDict[color] = True
 
 
-    def movePiece(self, startPos, targetPos, raw=False, ignoreCheck=False, ignoreMate=False, *args, **kwargs):
+    def movePiece(self, startPos, targetPos, raw=False, ignoreCheck=False, ignoreMate=False, testMove=False):
 
         startPiece = self[startPos]
         targetPiece = self[targetPos]
@@ -258,7 +256,9 @@ class Board():
         allParams = locals()
 
         del allParams["self"]
-        for board in (deepcopy(self), self):
+        for num, board in ((1, deepcopy(self)), (2, self)):
+
+            print(num, id(board), id(self), id(board.pieceDict["white"][0]))
 
             allParams["board"] = board
 
@@ -277,6 +277,13 @@ class Board():
                     break
             else:
                 raise IllegalMove("Piece at {0} cannot move to {1}.".format(startPos, targetPos))
+
+            if testMove:
+                break
+
+            print(board)
+
+            print(self)
 
         for color in self.checkDict.keys():
             if self.checkMateDict[color] and not ignoreMate:
