@@ -1,9 +1,6 @@
 from copy import deepcopy, copy
 from Pieces import King, _Disabled, _Empty
 from Exceptions import *
-"""
-Maybe make Board inherit from numpy ndarray? 
-"""
 
 class Board():
     def __init__(self, rows, cols, ruleList):
@@ -187,31 +184,32 @@ class Board():
         self.checkForCheck()
 
 
+    def isThreatened(self, pos, alliedColor):
+
+        hostilePieces = [piece for col, pList in self.pieceDict.items() if col != alliedColor for piece in pList]
+
+        for hp in hostilePieces:
+            hostile = hp.getMoves(self)
+            if pos in hostile:
+                return True
+        else:
+            return False
+
+
+
     def checkForCheck(self, ignoreMate=False):
 
         colorList = list(self.pieceDict.keys())
 
         for color in self.pieceDict.keys():
 
-            hostilePieces = [piece for col, pList in self.pieceDict.items() if col != color for piece in pList]
+            for alliedKing in self.kingDict[color]:
 
-            for hp in hostilePieces:
-
-                hostile = hp.getMoves(self)
-
-                for alliedKing in self.kingDict[color]:
-
-                    if alliedKing.position in hostile:
-                        self.checkDict[color] = True
-                        break
-                else:
-                    continue
-
-                break
-
+                if self.isThreatened(alliedKing.position, color):
+                    self.checkDict[color] = True
+                    break
             else:
                 self.checkDict[color] = False
-
 
             if self.checkDict[color] and not ignoreMate:
 
@@ -222,7 +220,7 @@ class Board():
                     for move in self[alliedPos].getMoves(self):
 
                         try:
-                            self.movePiece(alliedPos, move, raw=True, ignoreMate=True, testMove=True)
+                            self.movePiece(alliedPos, move, raw=True, ignoreMate=True, _testMove=True)
 
                         except Check:
                             pass
@@ -242,10 +240,9 @@ class Board():
                 self.checkDict[color] = True
 
 
-    def movePiece(self, startPos, targetPos, raw=False, ignoreCheck=False, ignoreMate=False, testMove=False):
+    def movePiece(self, startPos, targetPos, raw=False, ignoreCheck=False, ignoreMate=False, _testMove=False, **kwargs):
 
         startPiece = self[startPos]
-        targetPiece = self[targetPos]
 
         if isinstance(startPiece, _Empty):
             raise EmptyError("Given position {0} is empty".format(startPos))
@@ -256,9 +253,11 @@ class Board():
         allParams = locals()
 
         del allParams["self"]
-        for num, board in ((1, deepcopy(self)), (2, self)):
 
-            print(num, id(board), id(self), id(board.pieceDict["white"][0]))
+        for board in (deepcopy(self), self):
+
+            allParams["startPiece"] = board[startPos]
+            allParams["targetPiece"] = board[targetPos]
 
             allParams["board"] = board
 
@@ -266,32 +265,26 @@ class Board():
                 if raw or rule.condition(**allParams):
                     notation = rule.action(**allParams)
 
-                    if board is self:
-                        rule.finishMove(**allParams)
-                        board.checkForCheck()
-                    elif not ignoreCheck:
-                        board.checkForCheck(ignoreMate=True)
-                        if board.checkDict[startPiece.color]:
-                            raise Check("Cannot move piece at {0} to {1} as your king is threatened.".format(startPos, targetPos))
+                    board.checkForCheck(ignoreMate=_testMove)
+
+                    if not ignoreCheck and board.checkDict[startPiece.color]:
+                        raise Check("Cannot move piece at {0} to {1} as your king is threatened.".format(startPos, targetPos))
 
                     break
             else:
                 raise IllegalMove("Piece at {0} cannot move to {1}.".format(startPos, targetPos))
 
-            if testMove:
+            if _testMove:
                 break
 
-            print(board)
+        if not _testMove:
+            for color in self.checkDict.keys():
+                if self.checkMateDict[color]:
+                    print(f"{color} in Checkmate!")
 
-            print(self)
-
-        for color in self.checkDict.keys():
-            if self.checkMateDict[color] and not ignoreMate:
-                print(f"{color} in Checkmate!")
-
-            elif self.checkDict[color]:
-                print(f"{color} in Check!")
-        return notation
+                elif self.checkDict[color]:
+                    print(f"{color} in Check!")
+            return notation
 
 
 def init_classic(*rules):

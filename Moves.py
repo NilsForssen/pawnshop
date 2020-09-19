@@ -5,61 +5,58 @@ from abc import ABC, abstractclassmethod
 class Move(ABC):
 
     @abstractclassmethod
-    def condition(rule, **kwargs) -> bool:
+    def condition(thisMove, **kwargs) -> bool:
         """
-        returns whether the rule is aplicable on the given move or not
+        returns whether the move is aplicable on the given move or not
         """
 
-        raise NotImplementedError("condition() not yet implmented in rule.")
+        raise NotImplementedError("condition() not yet implmented in move.")
 
     @abstractclassmethod
-    def action(rule, **kwargs) -> str:
+    def action(thisMove, **kwargs) -> str:
         """
         Proceeds to carry out the move
 
         returns the move-notation 
         """
-        raise NotImplementedError("action() not yet implemented in rule.")
-
-    @classmethod
-    def finishMove(rule, startPiece, targetPos, **kwargs):
-        """
-        Move the piece instances
-
-        This method is called after action() has been validated
-        """
-        startPiece.move(targetPos)
-
+        raise NotImplementedError("action() not yet implemented in move.")
+        
 
 class Standard(Move):
 
     @classmethod
-    def condition(rule, board, startPiece, targetPos, **kwargs):
+    def condition(thisMove, board, startPiece, targetPos, **kwargs):
 
         returned = targetPos in startPiece.getMoves(board)
 
         return returned
 
     @classmethod
-    def action(rule, board, startPiece, targetPiece, startPos, targetPos, **kwargs):
+    def action(thisMove, board, startPiece, targetPiece, startPos, targetPos, **kwargs):
 
         notation = startPiece.symbol
 
-        print("DO SOME ACTION!")
-
         if not isinstance(targetPiece, _Empty):
             notation += "x"
-            board[startPos], board[targetPos] = _Empty(), board[startPos]
+            board[startPos], board[targetPos] = _Empty(), startPiece
         else:
-            board[startPos], board[targetPos] = board[targetPos], board[startPos]
+            board[startPos], board[targetPos] = targetPiece, startPiece
             pass
 
         notation += str(targetPos)
 
+        startPiece.move(targetPos)
+
         return notation
 
 
-class Castle_K(Move):
+class Castling(Move):
+
+    def pieceConditions(p1, p2):
+        return (isinstance(p1, King) and isinstance(p2, Rook)) and p1.firstMove and p2.firstMove and p1.color == p2.color
+
+    def posConditions(pos1, pos2):
+        return bool(pos2[0] - pos1[0]) != bool(pos2[1] - pos1[1]) and (not pos2[0] - pos1[0] or not pos2[1] - pos1[1])
 
     def findBetween(pos1, pos2):
 
@@ -73,45 +70,17 @@ class Castle_K(Move):
             rowRange = range(pos2[0] + rowStep, pos1[0], rowStep)
             colRange = [pos1[1]]*len(rowRange)
 
-        return zip(rowRange, colRange)
+        return tuple(zip(rowRange, colRange))
 
-
-    def pieceConditions(p1, p2):
-        return (isinstance(p1, King) and isinstance(p2, Rook)) and p1.firstMove and p2.firstMove
-
-
-    def posCondition(pos1, pos2):
-        return bool(pos2[0] - pos1[0]) != bool(pos2[1] - pos1[1]) and (not pos2[0] - pos1[0] or not pos2[1] - pos1[1])
-
-
-    def emptyBetween(board, posZip):
-        for pos in posZip:
+    def emptyBetween(board, between):
+        for pos in between:
 
             if not isinstance(board[pos], _Empty):
                 return False
         else:
             return True
 
-
-    @classmethod
-    def condition(move, board, startPos, targetPos, startPiece, targetPiece, **kwargs):
-
-        if move.pieceConditions(startPiece, targetPiece) and move.posConditions(startPos, targetPos):
-                
-                between = move.findBetween(startPos, targetPos)
-
-                return emptyBetween(board, between) and not len(between) % 2
-
-        return False
-
-
-    @classmethod
-    def action(move, board, startPos, targetPos, **kwargs):
-
-        between = tuple(move.findBetween(startPos, targetPos))
-
-        piece1 = board[startPos]
-        piece2 = board[targetPos]
+    def getTarget(between):
 
         if not len(between) % 2:
             target1 = between[int((len(between)/2)-1)]
@@ -121,27 +90,69 @@ class Castle_K(Move):
             target1 = between[int((len(between)/2) - 0.5)]
             target2 = between[int((len(between)/2) + 0.5)]
 
-        print("DO SOME ACTION!")
+        return (target1, target2)
 
+    def pathNotThreatened(board, path, color):
+        for pos in path:
+            if board.isThreatened(pos, color):
+                return False
+        else:
+            return True
+
+    @classmethod
+    def condition(thisMove, board, startPos, targetPos, startPiece, targetPiece, between, ignoreCheck, **kwargs):
+
+        if thisMove.pieceConditions(startPiece, targetPiece) and thisMove.posConditions(startPos, targetPos) and (ignoreCheck or not board.checkDict[startPiece.color]):
+
+                kingTarget, _ = move.getTarget(between)
+
+                kingPath = thisMove.findBetween(startPos, kingTarget)
+
+                return thisMove.emptyBetween(board, between) and move.pathNotThreatened(board, kingPath, startPiece.color)
+
+        return False
+
+
+    @classmethod
+    def action(thisMove, board, startPos, targetPos, startPiece, targetPiece, **kwargs):
+
+        between = thisMove.findBetween(startPos, targetPos)
+
+        kingTarget, rookTarget = thisMove.getTarget(between)
+
+        board[startPos], board[kingTarget] = board[kingTarget], startPiece
+        board[targetPos], board[rookTarget] = board[rookTarget], targetPiece
+
+        startPiece.move(kingTarget)
+        startPiece.move(rookTarget)
+
+
+class Castle_K(Castling):
+
+    @classmethod
+    def condition(thisMove, **kwargs):
+        between = thisMove.findBetween(kwargs["startPos"], kwargs["targetPos"])
+        if not len(between) % 2:
+            return super().condition(between=between, **kwargs)
+
+
+    @classmethod
+    def action(thisMove, **kwargs):
+        super().ation(**kwargs)
         return "O-O"
 
 
 class Castle_Q(Castle_K):
 
     @classmethod
-    def condition(move, board, startPos, targetPos, startPiece, targetPiece, **kwargs):
-        if move.pieceConditions(startPiece, targetPiece) and move.posConditions(startPos, targetPos):
-                
-            between = move.findBetween(startPos, targetPos)
-
-            return emptyBetween(board, between) and len(between) % 2
-
-        return False
+    def condition(thisMove, **kwargs):
+        between = thisMove.findBetween(kwargs["startPos"], kwargs["targetPos"])
+        if len(between) % 2:
+            return super().condition(between=between, **kwargs)
 
 
     @classmethod
-    def action(move, **kwargs):
-
+    def action(thisMove, **kwargs):
         super().action(**kwargs)
         return "O-O-O"
 

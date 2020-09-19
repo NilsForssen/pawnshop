@@ -2,7 +2,6 @@ from Pieces import *
 from StandardSetups import *
 from Exceptions import *
 
-
 board = classic()
 
 board.movePiece((1,3), (3,3))
@@ -69,6 +68,6 @@ board.movePiece((7,3), (5,3), ignoreCheck=True)
 
 board.movePiece((7,2), (5,4), ignoreCheck=True)
 
-board.movePiece((7,4), (7,0))
+board.movePiece((7,4), (7,0), ignoreCheck=True)
 
 print(board)
