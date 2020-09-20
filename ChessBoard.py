@@ -196,7 +196,6 @@ class Board():
             return False
 
 
-
     def checkForCheck(self, ignoreMate=False):
 
         colorList = list(self.pieceDict.keys())
@@ -281,9 +280,11 @@ class Board():
             for color in self.checkDict.keys():
                 if self.checkMateDict[color]:
                     print(f"{color} in Checkmate!")
+                    notation += "#"
 
                 elif self.checkDict[color]:
                     print(f"{color} in Check!")
+                    notation += "+"
             return notation
 
 
