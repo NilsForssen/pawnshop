@@ -1,5 +1,6 @@
 from Pieces import King, Rook, _Empty
 from abc import ABC, abstractclassmethod
+from Utils import toNotation
 
 
 class Move(ABC):
@@ -43,7 +44,7 @@ class Standard(Move):
             board[startPos], board[targetPos] = targetPiece, startPiece
             pass
 
-        notation += str(targetPos)
+        notation += toNotation(targetPos, board)
 
         startPiece.move(targetPos)
 
@@ -104,11 +105,11 @@ class Castling(Move):
 
         if thisMove.pieceConditions(startPiece, targetPiece) and thisMove.posConditions(startPos, targetPos) and (ignoreCheck or not board.checkDict[startPiece.color]):
 
-                kingTarget, _ = move.getTarget(between)
+                kingTarget, _ = thisMove.getTarget(between)
 
                 kingPath = thisMove.findBetween(startPos, kingTarget)
 
-                return thisMove.emptyBetween(board, between) and move.pathNotThreatened(board, kingPath, startPiece.color)
+                return thisMove.emptyBetween(board, between) and thisMove.pathNotThreatened(board, kingPath, startPiece.color)
 
         return False
 
@@ -139,10 +140,10 @@ class Castle_K(Castling):
     @classmethod
     def action(thisMove, **kwargs):
         super().ation(**kwargs)
-        return "O-O"
+        return "0-0"
 
 
-class Castle_Q(Castle_K):
+class Castle_Q(Castling):
 
     @classmethod
     def condition(thisMove, **kwargs):
@@ -154,7 +155,7 @@ class Castle_Q(Castle_K):
     @classmethod
     def action(thisMove, **kwargs):
         super().action(**kwargs)
-        return "O-O-O"
+        return "0-0-0"
 
 
 class En_Passant(Move):

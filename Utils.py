@@ -38,9 +38,8 @@ def convPosition(func):
 def toNotation(pos, board):
     notation = ""
 
-    notation += board._rows - pos[0]
-
-    notation += conv2Alpha(pos[1])
+    notation += conv2Alpha(pos[0])
+    notation += str(board._rows - pos[1])
 
     return notation
 

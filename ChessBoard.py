@@ -1,6 +1,7 @@
 from copy import deepcopy, copy
 from Pieces import King, _Disabled, _Empty
 from Exceptions import *
+from Utils import countAlpha
 
 class Board():
     def __init__(self, rows, cols, ruleList):
@@ -38,13 +39,23 @@ class Board():
     def __str__(self):
 
         string = "\n"
+        ending = "\t|\n\n\t\t__" + ("\t__" * self._cols) + "\n\n\t\t"
+        alpha = countAlpha()
 
         for row in self._board:
+
+            num, char = next(alpha)
+
+            string += str(self._rows - num) + "\t|\t\t"
+
             for piece in row:
                 string += str(piece) + "\t"
+
             string += "\n\n"
 
-        return string
+            ending += "\t" + char.upper()
+
+        return string + ending
 
 
     def __setitem__(self, index, item):

@@ -67,6 +67,16 @@ print(board.movePiece((7,3), (5,3), ignoreCheck=True))
 
 print(board.movePiece((7,2), (5,4), ignoreCheck=True))
 
-print(board.movePiece((7,4), (7,0), ignoreCheck=True))
+try:
+    print(board.movePiece((7,4), (7,0)))
+    raise UnsuccessfulTest
+except IllegalMove:
+    print("Test Success")
+
+print(board.movePiece((6,5), (3,5)))
+
+print(board.movePiece((3,5), (5,3)))
+
+#print(board.movePiece((7,4), (7,0)))
 
 print(board)
