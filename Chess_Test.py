@@ -1,8 +1,11 @@
 from Pieces import *
-from StandardSetups import *
+from StandardSetups import classic_pieces
 from Exceptions import *
+from ChessBoard import init_classic
+from Moves import Castle_K, Castle_Q, _Standard
 
-board = classic()
+board = init_classic(_Standard, Castle_K, Castle_Q)
+board.pieceSetup(classic_pieces.items())
 
 print(board.movePiece((1,3), (3,3)))
 
@@ -77,6 +80,14 @@ print(board.movePiece((6,5), (3,5)))
 
 print(board.movePiece((3,5), (5,3)))
 
-#print(board.movePiece((7,4), (7,0)))
+try:
+    print(board.movePiece((7,4), (7,0)))
+    raise UnsuccessfulTest
+except IllegalMove:
+    print("Test Success")
 
+print(board.movePiece((5,3), (3,5)))
+
+
+print(board.movePiece((7,4), (7,0)))
 print(board)

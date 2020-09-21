@@ -1,4 +1,5 @@
 from Utils import _catchOutofBounce, _positivePos, infiRange
+from abc import ABC, abstractmethod
 
 _directions = {
     "up": ((-1,0), (-1,1), (-1,-1)),
@@ -7,7 +8,7 @@ _directions = {
     "left": ((0,1), (1,1), (-1,1))
 }
 
-class Piece():
+class Piece(ABC):
     def __init__(self, color, value, symbol):
         self._position = None
         self.color = color
@@ -18,6 +19,15 @@ class Piece():
 
     def __str__(self):
         return self.color[0] + self.symbol
+
+
+    @abstractmethod
+    def getMoves(pInstance, board):
+        """
+        returns all the possible destinations for this piece given the current board and the position of the piece-instance
+        """
+
+        raise NotImplementedError
 
 
     @property

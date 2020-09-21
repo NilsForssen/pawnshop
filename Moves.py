@@ -16,14 +16,15 @@ class Move(ABC):
     @abstractclassmethod
     def action(thisMove, **kwargs) -> str:
         """
-        Proceeds to carry out the move
+        Do the move
 
         returns the move-notation 
         """
+        
         raise NotImplementedError("action() not yet implemented in move.")
         
 
-class Standard(Move):
+class _Standard(Move):
 
     @classmethod
     def condition(thisMove, board, startPiece, targetPos, **kwargs):
@@ -51,7 +52,7 @@ class Standard(Move):
         return notation
 
 
-class Castling(Move):
+class _Castling(Move):
 
     def pieceConditions(p1, p2):
         return (isinstance(p1, King) and isinstance(p2, Rook)) and p1.firstMove and p2.firstMove and p1.color == p2.color
@@ -128,7 +129,7 @@ class Castling(Move):
         startPiece.move(rookTarget)
 
 
-class Castle_K(Castling):
+class Castle_K(_Castling):
 
     @classmethod
     def condition(thisMove, **kwargs):
@@ -143,7 +144,7 @@ class Castle_K(Castling):
         return "0-0"
 
 
-class Castle_Q(Castling):
+class Castle_Q(_Castling):
 
     @classmethod
     def condition(thisMove, **kwargs):
