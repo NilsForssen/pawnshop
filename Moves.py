@@ -1,6 +1,6 @@
-from Pieces import King, Rook, _Empty
+from Pieces import King, Rook, Pawn, _Empty
 from abc import ABC, abstractclassmethod
-from Utils import toNotation
+from Utils import createNotation
 
 
 class Move(ABC):
@@ -35,21 +35,17 @@ class _Standard(Move):
 
     @classmethod
     def action(thisMove, board, startPiece, targetPiece, startPos, targetPos, **kwargs):
-
-        notation = startPiece.symbol
-
+        
+        capture = False 
         if not isinstance(targetPiece, _Empty):
-            notation += "x"
+            capture = True
             board[startPos], board[targetPos] = _Empty(), startPiece
         else:
             board[startPos], board[targetPos] = targetPiece, startPiece
-            pass
-
-        notation += toNotation(targetPos, board)
 
         startPiece.move(targetPos)
 
-        return notation
+        return createNotation(board, startPiece, startPos, targetPos, isPawn=isinstance(startPiece, Pawn), capture=capture)
 
 
 class _Castling(Move):

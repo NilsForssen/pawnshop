@@ -4,7 +4,7 @@ from Exceptions import *
 from Utils import countAlpha
 
 class Board():
-    def __init__(self, rows, cols, ruleList):
+    def __init__(self, rows, cols, moveList):
         self._board = [[_Empty() for col in range(cols)] for row in range(rows)]
 
         self._rows = rows
@@ -12,10 +12,11 @@ class Board():
 
         self.resetDicts()
 
-        self.rules = []
+        self.moves = []
+        self.history = []
 
-        for rule in ruleList:
-            self.rules.append(rule)
+        for move in moveList:
+            self.moves.append(move)
 
 
     @property
@@ -55,7 +56,7 @@ class Board():
 
             ending += "\t" + char.upper()
 
-        return string + ending
+        return string + ending + "\n\n"
 
 
     def __setitem__(self, index, item):
@@ -271,7 +272,7 @@ class Board():
 
             allParams["board"] = board
 
-            for rule in board.rules:
+            for rule in board.moves:
                 if raw or rule.condition(**allParams):
                     notation = rule.action(**allParams)
 
@@ -296,17 +297,20 @@ class Board():
                 elif self.checkDict[color]:
                     print(f"{color} in Check!")
                     notation += "+"
-            return notation
+
+            self.history.append(notation)
+
+        return notation
 
 
-def init_classic(*rules):
-    board = Board(8,8, ruleList=rules)
+def init_classic(*moves):
+    board = Board(8,8, moveList=moves)
 
     return board
 
 
-def init_4P(*rules):
-    board = Board(14,14, ruleList=rules)
+def init_4P(*moves):
+    board = Board(14,14, moveList=moves)
 
     board.disablePositions([
         (0,0), (0,1), (1,0), (1,1), (0,2), (2,0), (1,2), (2,1), (2,2),

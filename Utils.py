@@ -29,27 +29,6 @@ def infiRange(start, stop=None, step=1):
         i += step
 
 
-def convPosition(func):
-    def wrapper(instance, *args, **kwargs):
-        if isinstance(pos, string):
-            func(pos)
-
-            
-def toNotation(pos, board):
-    notation = ""
-
-    notation += conv2Alpha(pos[1])
-    notation += str(board._rows - pos[0])
-
-    return notation
-
-
-def conv2Alpha(num):
-    for n, notation in countAlpha():
-        if num == n:
-            return notation
-
-
 def countAlpha():
     stringList = [0]
     num = 0
@@ -76,3 +55,70 @@ def countAlpha():
 
                 stringList[-i] = charToChange2
                 break
+
+
+def formatNum(num, board):
+    return str(board.rows - num)
+
+
+def toAlpha(num):
+    for n, notation in countAlpha():
+        if num == n:
+            return notation
+            
+
+def createNotation(board, startPiece, startPos, targetPos, isPawn=False, capture=False):
+
+    notation = ""
+    targetNot = toChessMetric(targetPos, board)
+
+    if not isPawn:
+
+        notation = startPiece.symbol
+        for piece in board.pieceDict[startPiece.color]:
+            if not piece is startPiece and isinstance(piece, type(startPiece)):
+                if targetPos in piece.getMoves(board):
+                    if piece.position[1] == startPos[1]:
+                        notation += formatNum(startPos[0], board)
+                    else: 
+                        notation += toAlpha(startPos[1])
+                    break
+    elif capture:
+        notation = toAlpha(startPos[1])
+
+    if capture:
+        notation += "x"
+
+    notation += targetNot
+
+    return notation
+
+            
+def toChessMetric(chessPosition, board):
+    notation = ""
+
+    notation += toAlpha(chessPosition[1])
+    notation += formatNum(chessPosition[0], board)
+
+    return notation
+
+
+def toChessPosition(chessMetric, board):
+
+    for i, char in enumerate(chessMetric):
+        if not char in ascii_lowercase:
+
+            if i == 0: raise ValueError("Chess metric does not include column")
+            
+            alpha = chessMetric[:i]
+            num = chessMetric[i::]
+
+            if not len(num): raise ValueError("Chess metric does not include row")
+
+            row = board.rows - int(num)
+            for n, a in countAlpha():
+                if a == alpha:
+                    col = n
+                    break
+
+    return (row, col)
