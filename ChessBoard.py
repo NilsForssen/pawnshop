@@ -324,5 +324,4 @@ def init_4P(*moves):
 
 if __name__ == "__main__":
 
-    thisBoard = Board(8,8, [])
-    print(thisBoard[1:3, 1:3])
+    # Do some testing

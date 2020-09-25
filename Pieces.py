@@ -100,11 +100,24 @@ class Pawn(Piece):
     def __init__(self, color, direction="up"):
         super().__init__(color, 1, "P")
 
+        # Flag used for en-passant, only applies to pawns
+        self.secondMove = False
+        
         direction = direction.lower()
         if direction in _directions.keys():
             self.direction, self.diagonal_1, self.diagonal_2 = _directions[direction]
         else:
             raise ValueError("Given direction is not any of \"up\", \"down\", \"left\" or \"right\".")
+
+
+    def move(self, pos):
+
+        super().move(pos)
+
+        if self.secondMove:
+            self.secondMove = False
+        elif not self.firstMove:
+            self.secondMove = True
 
 
     def getMoves(self, board):
@@ -285,3 +298,7 @@ class _Disabled():
 class _Empty():
     def __str__(self):
         return "__"
+
+if __name__ == "__main__":
+
+    # Do some testing

@@ -1,8 +1,8 @@
+from ChessBoard import Board, init_classic
 from StandardSetups import classic_pieces
-from Exceptions import *
-from ChessBoard import init_classic
 from Moves import Castle_K, Castle_Q, _Standard
 from Utils import toChessPosition
+from Exceptions import *
 
 board = init_classic(_Standard, Castle_K, Castle_Q)
 board.pieceSetup(classic_pieces.items())
@@ -134,4 +134,4 @@ except IllegalMove:
 
 print(board)
 
-print(board.history)
+#print(board.history)

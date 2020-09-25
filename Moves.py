@@ -162,3 +162,8 @@ class En_Passant(Move):
 
     def action(board, *kwargs):
         return notation 
+
+
+if __name__ == "__main__":
+
+    # Do some testing

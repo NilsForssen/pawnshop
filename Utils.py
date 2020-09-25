@@ -122,3 +122,8 @@ def toChessPosition(chessMetric, board):
                     break
 
     return (row, col)
+
+
+if __name__ == "__main__":
+
+    # Do some testing
