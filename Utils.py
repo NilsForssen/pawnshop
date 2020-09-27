@@ -127,3 +127,4 @@ def toChessPosition(chessMetric, board):
 if __name__ == "__main__":
 
     # Do some testing
+    pass

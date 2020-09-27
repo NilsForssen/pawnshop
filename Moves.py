@@ -167,3 +167,4 @@ class En_Passant(Move):
 if __name__ == "__main__":
 
     # Do some testing
+    pass

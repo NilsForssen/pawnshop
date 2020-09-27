@@ -124,3 +124,8 @@ def four_player():
     board.pieceSetup(four_player_pieces)
 
     return board 
+
+if __name__ == "__main__":
+
+    # Do some testing
+    pass

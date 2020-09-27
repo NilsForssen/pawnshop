@@ -1,6 +1,7 @@
 from Utils import _catchOutofBounce, _positivePos, infiRange
 from abc import ABC, abstractmethod
 
+
 _directions = {
     "up": ((-1,0), (-1,1), (-1,-1)),
     "down": ((1,0), (1,1), (1,-1)), 
@@ -17,8 +18,8 @@ class Piece(ABC):
         self.firstMove = True
 
 
-    def __str__(self):
-        return self.color[0] + self.symbol
+    # def __str__(self):
+    #     return self.color[0] + self.symbol
 
 
     @abstractmethod
@@ -43,6 +44,12 @@ class Piece(ABC):
     def move(self, destPos):
         self.position = destPos
         self.firstMove = False
+
+
+    def postMove(self, board):
+
+        # Do something after a piece is moved
+        pass
 
 
     def getDest(self, offx, offy):
@@ -101,7 +108,8 @@ class Pawn(Piece):
         super().__init__(color, 1, "P")
 
         # Flag used for en-passant, only applies to pawns
-        self.secondMove = False
+        self.passed = False
+        self.afterPassed = False
         
         direction = direction.lower()
         if direction in _directions.keys():
@@ -110,14 +118,22 @@ class Pawn(Piece):
             raise ValueError("Given direction is not any of \"up\", \"down\", \"left\" or \"right\".")
 
 
+    def postMove(self, board):
+        if self.passed:
+            if not self.afterPassed:
+                self.afterPassed = True
+            else:
+                self.passed = False
+
+
     def move(self, pos):
 
-        super().move(pos)
+        if self.firstMove:
+            print(pos, self.position)
+            if (abs(pos[0] - self.position[0]) == 2 and pos[1] == self.position[1]) or (abs(pos[1] - self.position[1]) == 2 and pos[0] == self.position[0]):
+                self.passed = True
 
-        if self.secondMove:
-            self.secondMove = False
-        elif not self.firstMove:
-            self.secondMove = True
+        super().move(pos)
 
 
     def getMoves(self, board):
@@ -302,3 +318,4 @@ class _Empty():
 if __name__ == "__main__":
 
     # Do some testing
+    pass

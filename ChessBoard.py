@@ -88,26 +88,24 @@ class Board():
             item1 = self._board[row][col]
             item2 = item[i]
 
-            self._board[row][col] = item2
+            print(item1, item2)
+
+            if not isinstance(item1, _Empty):
+                self._removePiece(item1)
+                print("removed: ", item1dfg)
 
             if not isinstance(item2, _Empty):
 
-                if isinstance(item1, _Empty):
-                    self._addPiece(item2, (row, col))
+                if item2 in [p for pList in self.pieceDict.values() for p in pList]:   
+                    pass
                 else:
-                    self.removePiece(item1)
-                    
-                    if len(self.pieceDict.values()) == 0:
-                        self._addPiece(item2, (row, col))
-                    else:
-                        for pList in self.pieceDict.values():
-                            if item2 not in pList:
-                                self._addPiece(item[i], (row, col))
-                                break
-                            
-            else:
-                
-                self.removePiece(item1)
+                    self._addPiece(item2, (row, col))
+                    print("added: ", item2)
+
+            self._board[row][col] = item2
+
+
+
 
 
     def __getitem__(self, index): 
@@ -166,7 +164,7 @@ class Board():
         piece.position = pos
 
 
-    def removePiece(self, piece):
+    def _removePiece(self, piece):
 
         try:
             self.pieceDict[piece.color].remove(piece)
@@ -298,6 +296,9 @@ class Board():
                     print(f"{color} in Check!")
                     notation += "+"
 
+            for piece in [p for pList in self.pieceDict.values() for p in pList]:
+                piece.postMove(board)
+
             self.history.append(notation)
 
         return notation
@@ -325,3 +326,4 @@ def init_4P(*moves):
 if __name__ == "__main__":
 
     # Do some testing
+    pass
