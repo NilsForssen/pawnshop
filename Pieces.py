@@ -18,8 +18,8 @@ class Piece(ABC):
         self.firstMove = True
 
 
-    # def __str__(self):
-    #     return self.color[0] + self.symbol
+    def __str__(self):
+        return self.color[0] + self.symbol
 
 
     @abstractmethod
@@ -46,9 +46,11 @@ class Piece(ABC):
         self.firstMove = False
 
 
-    def postMove(self, board):
-
-        # Do something after a piece is moved
+    def postAction(self, board):
+        """
+        Do something after another piece is moved
+        Can be used to disable en-passant after a pawn was not en-passant captured.
+        """
         pass
 
 
@@ -109,27 +111,21 @@ class Pawn(Piece):
 
         # Flag used for en-passant, only applies to pawns
         self.passed = False
-        self.afterPassed = False
+        self.direction = direction.lower()
         
-        direction = direction.lower()
         if direction in _directions.keys():
-            self.direction, self.diagonal_1, self.diagonal_2 = _directions[direction]
+            self.forward, self.diagonal_1, self.diagonal_2 = _directions[direction]
         else:
             raise ValueError("Given direction is not any of \"up\", \"down\", \"left\" or \"right\".")
 
 
-    def postMove(self, board):
-        if self.passed:
-            if not self.afterPassed:
-                self.afterPassed = True
-            else:
-                self.passed = False
+    def postAction(self, board):
+        passed = False
 
 
     def move(self, pos):
 
         if self.firstMove:
-            print(pos, self.position)
             if (abs(pos[0] - self.position[0]) == 2 and pos[1] == self.position[1]) or (abs(pos[1] - self.position[1]) == 2 and pos[0] == self.position[0]):
                 self.passed = True
 
@@ -143,12 +139,12 @@ class Pawn(Piece):
 
         destList = []
 
-        dest = self.getDest(*self.direction)
+        dest = self.getDest(*self.forward)
         if self.canWalk(dest, board):
             destList.append(dest)
 
             if self.firstMove:
-                dest = self.getDest(*(self.direction[0]*2, self.direction[1]*2))
+                dest = self.getDest(*(self.forward[0]*2, self.forward[1]*2))
                 if self.canWalk(dest, board):
                     destList.append(dest)
 

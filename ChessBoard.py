@@ -88,11 +88,8 @@ class Board():
             item1 = self._board[row][col]
             item2 = item[i]
 
-            print(item1, item2)
-
             if not isinstance(item1, _Empty):
                 self._removePiece(item1)
-                print("removed: ", item1dfg)
 
             if not isinstance(item2, _Empty):
 
@@ -100,12 +97,13 @@ class Board():
                     pass
                 else:
                     self._addPiece(item2, (row, col))
-                    print("added: ", item2)
 
             self._board[row][col] = item2
 
 
+    def swapPositions(self, pos1, pos2):
 
+        self._board[pos1[0]][pos1[1]], self._board[pos2[0]][pos2[1]] = self._board[pos2[0]][pos2[1]], self._board[pos1[0]][pos1[1]]
 
 
     def __getitem__(self, index): 
@@ -220,6 +218,7 @@ class Board():
             else:
                 self.checkDict[color] = False
 
+
             if self.checkDict[color] and not ignoreMate:
 
                 alliedPiecesPos = map(lambda p : p.position, self.pieceDict[color])
@@ -229,7 +228,7 @@ class Board():
                     for move in self[alliedPos].getMoves(self):
 
                         try:
-                            self.movePiece(alliedPos, move, raw=True, ignoreMate=True, _testMove=True)
+                            self.movePiece(alliedPos, move, raw=True, ignoreMate=True, testMove=True, checkForMate=False)
 
                         except Check:
                             pass
@@ -249,7 +248,7 @@ class Board():
                 self.checkDict[color] = True
 
 
-    def movePiece(self, startPos, targetPos, raw=False, ignoreCheck=False, ignoreMate=False, _testMove=False, **kwargs):
+    def movePiece(self, startPos, targetPos, raw=False, ignoreCheck=False, ignoreMate=False, testMove=False, checkForCheck=True, checkForMate=True, **kwargs):
 
         startPiece = self[startPos]
 
@@ -274,19 +273,20 @@ class Board():
                 if raw or rule.condition(**allParams):
                     notation = rule.action(**allParams)
 
-                    board.checkForCheck(ignoreMate=_testMove)
+                    if checkForCheck:
+                        board.checkForCheck(ignoreMate=not checkForMate)
 
-                    if not ignoreCheck and board.checkDict[startPiece.color]:
-                        raise Check("Cannot move piece at {0} to {1} as your king is threatened.".format(startPos, targetPos))
+                        if not ignoreCheck and board.checkDict[startPiece.color]:
+                            raise Check("Cannot move piece at {0} to {1} as your king is threatened.".format(startPos, targetPos))
 
                     break
             else:
                 raise IllegalMove("Piece at {0} cannot move to {1}.".format(startPos, targetPos))
 
-            if _testMove:
+            if testMove:
                 break
 
-        if not _testMove:
+        if not testMove:
             for color in self.checkDict.keys():
                 if self.checkMateDict[color]:
                     print(f"{color} in Checkmate!")
@@ -297,7 +297,9 @@ class Board():
                     notation += "+"
 
             for piece in [p for pList in self.pieceDict.values() for p in pList]:
-                piece.postMove(board)
+                
+                if not piece is startPiece:
+                    piece.postAction(board)
 
             self.history.append(notation)
 

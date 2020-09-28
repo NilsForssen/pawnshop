@@ -39,9 +39,12 @@ class _Standard(Move):
         capture = False 
         if not isinstance(targetPiece, _Empty):
             capture = True
-            board[startPos], board[targetPos] = _Empty(), startPiece
+            board.swapPositions(startPos, targetPos)
+            board[startPos] = _Empty()
+            # board[startPos], board[targetPos] = _Empty(), startPiece
         else:
-            board[startPos], board[targetPos] = targetPiece, startPiece
+            board.swapPositions(startPos, targetPos)
+            # board[startPos], board[targetPos] = targetPiece, startPiece
 
         startPiece.move(targetPos)
 
@@ -64,7 +67,7 @@ class _Castling(Move):
         if not rowStep: 
             colRange = range(pos2[1] + colStep, pos1[1], colStep)
             rowRange = [pos1[0]]*len(colRange)
-        elif not colStep:
+        else:
             rowRange = range(pos2[0] + rowStep, pos1[0], rowStep)
             colRange = [pos1[1]]*len(rowRange)
 
@@ -118,11 +121,13 @@ class _Castling(Move):
 
         kingTarget, rookTarget = thisMove.getTarget(between)
 
-        board[startPos], board[kingTarget] = board[kingTarget], startPiece
-        board[targetPos], board[rookTarget] = board[rookTarget], targetPiece
+        board.swapPositions(startPos, kingTarget)
+        board.swapPositions(targetPos, rookTarget)
+        # board[startPos], board[kingTarget] = board[kingTarget], startPiece
+        # board[targetPos], board[rookTarget] = board[rookTarget], targetPiece
 
         startPiece.move(kingTarget)
-        startPiece.move(rookTarget)
+        targetPiece.move(rookTarget)
 
 
 class Castle_K(_Castling):
@@ -157,11 +162,25 @@ class Castle_Q(_Castling):
 
 class En_Passant(Move):
 
-    def condition(**kwargs):
+    @classmethod
+    def condition(thisMove, board, startPiece, targetPiece, startPos, targetPos, **kwargs):
+        if isinstance(startPiece, Pawn) and isinstance(targetPiece, _Empty):
+
+            for diagonal in (startPiece.diagonal_1, startPiece.diagonal_2):
+
+                if targetPos == startPiece.getDest(*diagonal):
+
+                    nextTo = (startPos[0] - startPiece.forward[0] + diagonal[0], startPos[1] - startPiece.forward[1] + diagonal[1])
+                    if isinstance(board[nextTo], Pawn) and board[nextTo].passed:
+                        return True
+
         return False 
 
-    def action(board, *kwargs):
-        return notation 
+
+    @classmethod
+    def action(thisMove, **kwargs):
+        print("action")
+        return "hehe" 
 
 
 if __name__ == "__main__":
