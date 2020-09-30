@@ -5,8 +5,8 @@ from abc import ABC, abstractmethod
 _directions = {
     "up": ((-1,0), (-1,1), (-1,-1)),
     "down": ((1,0), (1,1), (1,-1)), 
-    "right": ((0,-1), (1,-1), (-1,-1)),
-    "left": ((0,1), (1,1), (-1,1))
+    "right": ((0,1), (1,1), (-1,1)),
+    "left": ((0,-1), (1,-1), (-1,-1))
 }
 
 class Piece(ABC):

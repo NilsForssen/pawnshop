@@ -144,6 +144,7 @@ move("f5", "h5")
 move("f7", "f5")
 
 move("e5", "f6")
+
 print(board)
 
-#print(board.history)
+# print(board.history)

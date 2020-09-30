@@ -83,20 +83,22 @@ class Board():
         for i, (row, col) in enumerate(idxList):
 
             if isinstance(self._board[row][col], _Disabled):
-                raise DisabledError("Position {0} of board is disabled and thus unavailible".format((row, col)))
+                raise DisabledError((row, col))
 
             item1 = self._board[row][col]
             item2 = item[i]
 
-            if not isinstance(item1, _Empty):
-                self._removePiece(item1)
+            if not isinstance(item2, _Disabled):
 
-            if not isinstance(item2, _Empty):
+                if not isinstance(item1, _Empty):
+                    self._removePiece(item1)
 
-                if item2 in [p for pList in self.pieceDict.values() for p in pList]:   
-                    pass
-                else:
-                    self._addPiece(item2, (row, col))
+                if not isinstance(item2, _Empty):
+
+                    if item2 in [p for pList in self.pieceDict.values() for p in pList]:   
+                        pass
+                    else:
+                        self._addPiece(item2, (row, col))
 
             self._board[row][col] = item2
 
@@ -114,6 +116,8 @@ class Board():
 
         for rowIdx in range(rows.start, rows.stop, rows.step or 1 ):
             for colIdx in range(cols.start, cols.stop, cols.step or 1):
+                if isinstance(self._board[rowIdx][colIdx], _Disabled):
+                    raise DisabledError((rowIdx, colIdx))
                 res.append(self._board[rowIdx][colIdx])
 
 
@@ -253,10 +257,10 @@ class Board():
         startPiece = self[startPos]
 
         if isinstance(startPiece, _Empty):
-            raise EmptyError("Given position {0} is empty".format(startPos))
+            raise EmptyError(startPos)
 
         if self.checkMateDict[startPiece.color] and not ignoreMate:
-            raise CheckMate("{0} is Checkmated!".format(startPiece.color))
+            raise CheckMate(startPiece.color)
 
         allParams = locals()
 
@@ -277,11 +281,11 @@ class Board():
                         board.checkForCheck(ignoreMate=not checkForMate)
 
                         if not ignoreCheck and board.checkDict[startPiece.color]:
-                            raise Check("Cannot move piece at {0} to {1} as your king is threatened.".format(startPos, targetPos))
+                            raise Check(startPos, targetPos)
 
                     break
             else:
-                raise IllegalMove("Piece at {0} cannot move to {1}.".format(startPos, targetPos))
+                raise IllegalMove(startPos, targetPos)
 
             if testMove:
                 break
@@ -290,11 +294,13 @@ class Board():
             for color in self.checkDict.keys():
                 if self.checkMateDict[color]:
                     print(f"{color} in Checkmate!")
-                    notation += "#"
+                    if not "#" in notation: 
+                        notation += "#"
 
                 elif self.checkDict[color]:
                     print(f"{color} in Check!")
-                    notation += "+"
+                    if not "+" in notation: 
+                        notation += "+"
 
             for piece in [p for pList in self.pieceDict.values() for p in pList]:
                 
