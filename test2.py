@@ -1,5 +1,3 @@
-def test(this=int(1.23)):
-    print(this)
+test = ["up", "down", "left", "right"]
 
-
-test()
+print(f"{test}")

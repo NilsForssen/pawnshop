@@ -1,53 +1,32 @@
 from copy import deepcopy, copy
 from Pieces import King, _Disabled, _Empty
 from Exceptions import *
-from Utils import countAlpha
+from Utils import countAlpha, unpackIndexSlices
 
 class Board():
-    def __init__(self, rows, cols, moveList):
-        self._board = [[_Empty() for col in range(cols)] for row in range(rows)]
+    def __init__(self, rows, cols, moveDict):
+        self.rows = rows
+        self.cols = cols
 
-        self._rows = rows
-        self._cols = cols
-
-        self.resetDicts()
+        self.resetPieces()
 
         self.moves = []
         self.history = []
 
-        for move in moveList:
-            self.moves.append(move)
-
-
-    @property
-    def rows(self):
-        return self._rows
-
-
-    @property
-    def columns(self):
-        return self._cols
-
-
-    def resetDicts(self):
-
-        self.pieceDict = {}
-        self.kingDict = {}
-        self.checkDict = {}
-        self.checkMateDict = {}
+        self.moveDict = moveDict
 
 
     def __str__(self):
 
         string = "\n"
-        ending = "\t|\n\n\t\t__" + ("\t__" * self._cols) + "\n\n\t\t"
+        ending = "\t|\n\n\t\t__" + ("\t__" * self.cols) + "\n\n\t\t"
         alpha = countAlpha()
 
         for row in self._board:
 
             num, char = next(alpha)
 
-            string += str(self._rows - num) + "\t|\t\t"
+            string += str(self.rows - num) + "\t|\t\t"
 
             for piece in row:
                 string += str(piece) + "\t"
@@ -61,7 +40,7 @@ class Board():
 
     def __setitem__(self, index, item):
 
-        rows, cols = self._unpackIndexSlices(index)
+        rows, cols = self.unpackIndexSlices(index)
 
         idxList = []
 
@@ -103,15 +82,9 @@ class Board():
             self._board[row][col] = item2
 
 
-    def swapPositions(self, pos1, pos2):
-
-        self._board[pos1[0]][pos1[1]], self._board[pos2[0]][pos2[1]] = self._board[pos2[0]][pos2[1]], self._board[pos1[0]][pos1[1]]
-
-
     def __getitem__(self, index): 
 
-        rows, cols = self._unpackIndexSlices(index)
-
+        rows, cols = self.unpackIndexSlices(index)
         res = []
 
         for rowIdx in range(rows.start, rows.stop, rows.step or 1 ):
@@ -125,16 +98,19 @@ class Board():
         else: return res
 
 
-    def _unpackIndexSlices(self, idx):
-        try:
-            r, c = idx
-        except (TypeError, ValueError):
-            raise ValueError("Index position must be 2-dimensional.") from None
+    def resetPieces(self):
 
-        if type(r) is not slice: r = slice(r, r+1)
-        if type(c) is not slice: c = slice(c, c+1)
+        self._board = [[_Empty() for col in range(self.cols)] for row in range(self.rows)]
 
-        return r, c
+        self.pieceDict = {}
+        self.kingDict = {}
+        self.checkDict = {}
+        self.checkMateDict = {}
+
+
+    def swapPositions(self, pos1, pos2):
+
+        self._board[pos1[0]][pos1[1]], self._board[pos2[0]][pos2[1]] = self._board[pos2[0]][pos2[1]], self._board[pos1[0]][pos1[1]]
 
 
     def disablePositions(self, posList):
@@ -150,44 +126,9 @@ class Board():
         return dict([(k, 0) for k in self.colorList])
 
 
-    def _addPiece(self, piece, pos):
-
-        if not piece.color in self.pieceDict:
-            self.pieceDict[piece.color] = []
-            self.kingDict[piece.color] = []
-            self.checkDict[piece.color] = False
-            self.checkMateDict[piece.color] = False
-
-        self.pieceDict[piece.color].append(piece)
-
-        if isinstance(piece, King):
-            self.kingDict[piece.color].append(piece)
-
-        piece.position = pos
-
-
-    def _removePiece(self, piece):
-
-        try:
-            self.pieceDict[piece.color].remove(piece)
-
-            if isinstance(piece, King) and piece in self.kingDict[piece.color]:
-                self.kingDict[piece.color].remove(piece)
-
-            if not self.pieceDict[piece.color]:
-                self.pieceDict.pop(piece.color)
-                self.kingDict.pop(piece.color)
-                self.checkDict.pop(piece.color)
-                self.checkMateDict.pop(piece.color)
-        except:
-            print("cant remove piece for some reason")
-
-        piece.position = None
-
-
     def pieceSetup(self, pieceZip):
 
-        self.resetDicts()
+        self.resetPieces()
 
         for piece, pos in pieceZip:
 
@@ -262,18 +203,48 @@ class Board():
         if self.checkMateDict[startPiece.color] and not ignoreMate:
             raise CheckMate(startPiece.color)
 
-        allParams = locals()
-
-        del allParams["self"]
-
         for board in (deepcopy(self), self):
 
-            allParams["startPiece"] = board[startPos]
-            allParams["targetPiece"] = board[targetPos]
+            startPiece = self[startPos]
 
-            allParams["board"] = board
+            if targetPos in startPiece.getStandardMoves(board):
 
-            for rule in board.moves:
+                capture = False 
+                if not isinstance(board[targetPos], _Empty):
+                    capture = True
+                    board.swapPositions(startPos, targetPos)
+                    board[startPos] = _Empty()
+                    # board[startPos], board[targetPos] = _Empty(), startPiece
+                else:
+                    board.swapPositions(startPos, targetPos)
+                    # board[startPos], board[targetPos] = targetPiece, startPiece
+
+                startPiece.move(targetPos)
+
+                notation = createNotation(board, startPiece, startPos, targetPos, isPawn=isinstance(startPiece, Pawn), capture=capture)
+
+            else:
+                for specificMove in board.moveDict[startPiece.color]:
+
+                    if targetPos in specificMove.getApplicableMoves(startPiece, board):
+                        notation = specificMove.action(startPiece, targetPos, board)
+
+                        if checkForCheck:
+                            board.checkForCheck(ignoreMate=not checkForMate)
+
+                            if not ignoreCheck and board.checkDict[startPiece.color]:
+                                raise Check(startPos, targetPos)
+
+                        break
+
+                else:
+                    raise IllegalMove(startPos, targetPos)
+
+
+
+
+
+            for  in board.moves:
                 if raw or rule.condition(**allParams):
                     notation = rule.action(**allParams)
 
@@ -310,6 +281,41 @@ class Board():
             self.history.append(notation)
 
         return notation
+
+
+    def _addPiece(self, piece, pos):
+
+        if not piece.color in self.pieceDict:
+            self.pieceDict[piece.color] = []
+            self.kingDict[piece.color] = []
+            self.checkDict[piece.color] = False
+            self.checkMateDict[piece.color] = False
+
+        self.pieceDict[piece.color].append(piece)
+
+        if isinstance(piece, King):
+            self.kingDict[piece.color].append(piece)
+
+        piece.position = pos
+
+
+    def _removePiece(self, piece):
+
+        try:
+            self.pieceDict[piece.color].remove(piece)
+
+            if isinstance(piece, King) and piece in self.kingDict[piece.color]:
+                self.kingDict[piece.color].remove(piece)
+
+            if not self.pieceDict[piece.color]:
+                self.pieceDict.pop(piece.color)
+                self.kingDict.pop(piece.color)
+                self.checkDict.pop(piece.color)
+                self.checkMateDict.pop(piece.color)
+        except:
+            print("cant remove piece for some reason")
+
+        piece.position = None
 
 
 def init_classic(*moves):

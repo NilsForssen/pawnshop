@@ -20,6 +20,18 @@ def _positivePos(func):
     return wrapper
 
 
+def unpackIndexSlices(self, idx):
+    try:
+        r, c = idx
+    except (TypeError, ValueError):
+        raise ValueError("Index position must be 2-dimensional.") from None
+
+    if type(r) is not slice: r = slice(r, r+1)
+    if type(c) is not slice: c = slice(c, c+1)
+
+    return r, c
+
+
 def infiRange(start, stop=None, step=1):
     i = start
     while True:
@@ -32,12 +44,12 @@ def infiRange(start, stop=None, step=1):
 def countAlpha():
     stringList = [0]
     num = 0
-    
+
     while True:
 
         yield (num, "".join([ascii_lowercase[num] for num in stringList]))
         i = 1
-        num += 1 
+        num += 1
 
         while True:
 
@@ -49,7 +61,7 @@ def countAlpha():
 
             if charToChange2 >= len(ascii_lowercase):
                 stringList[-i::] = [0]*(i)
-                i += 1 
+                i += 1
                 continue
             else:
 
@@ -65,9 +77,9 @@ def toAlpha(num):
     for n, notation in countAlpha():
         if num == n:
             return notation
-            
 
-def createNotation(board, startPiece, startPos, targetPos, isPawn=False, capture=False):
+
+def createNotation(board, startPiece, targetPos, isPawn=False, capture=False):
 
     notation = ""
     targetNot = toChessMetric(targetPos, board)
@@ -76,15 +88,15 @@ def createNotation(board, startPiece, startPos, targetPos, isPawn=False, capture
 
         notation = startPiece.symbol
         for piece in board.pieceDict[startPiece.color]:
-            if not piece is startPiece and isinstance(piece, type(startPiece)):
+            if not piece is startPiece and isinstance(piece, startPiece):
                 if targetPos in piece.getMoves(board):
-                    if piece.position[1] == startPos[1]:
-                        notation += formatNum(startPos[0], board)
-                    else: 
-                        notation += toAlpha(startPos[1])
+                    if piece.position[1] == startPiece.position[1]:
+                        notation += formatNum(startPiece.position[0], board)
+                    else:
+                        notation += toAlpha(startPiece.position[1])
                     break
     elif capture:
-        notation = toAlpha(startPos[1])
+        notation = toAlpha(startPiece.position[1])
 
     if capture:
         notation += "x"
@@ -93,7 +105,7 @@ def createNotation(board, startPiece, startPos, targetPos, isPawn=False, capture
 
     return notation
 
-            
+
 def toChessMetric(chessPosition, board):
     notation = ""
 
@@ -109,7 +121,7 @@ def toChessPosition(chessMetric, board):
         if not char in ascii_lowercase:
 
             if i == 0: raise ValueError("Chess metric does not include column")
-            
+
             alpha = chessMetric[:i]
             num = chessMetric[i::]
 

@@ -1,4 +1,9 @@
-from Utils import infiRange
+import test
 
-for num in infiRange(0, step=0):
-    print(num)
+def test (param1,param2 , param3):
+
+
+    print("test")
+    return
+
+test ( 1,2, 3 )
