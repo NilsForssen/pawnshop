@@ -8,8 +8,8 @@ class Board():
         self.rows = rows
         self.cols = cols
 
+        self.resetBoard()
         self.resetPieces()
-
         self.moves = []
         self.history = []
 
@@ -40,7 +40,7 @@ class Board():
 
     def __setitem__(self, index, item):
 
-        rows, cols = self.unpackIndexSlices(index)
+        rows, cols = unpackIndexSlices(index)
 
         idxList = []
 
@@ -84,7 +84,7 @@ class Board():
 
     def __getitem__(self, index): 
 
-        rows, cols = self.unpackIndexSlices(index)
+        rows, cols = unpackIndexSlices(index)
         res = []
 
         for rowIdx in range(rows.start, rows.stop, rows.step or 1 ):
@@ -97,11 +97,10 @@ class Board():
         if len(res) == 1: return res.pop()
         else: return res
 
-
-    def resetPieces(self):
-
+    def resetBoard(self):
         self._board = [[_Empty() for col in range(self.cols)] for row in range(self.rows)]
 
+    def resetPieces(self):
         self.pieceDict = {}
         self.kingDict = {}
         self.checkDict = {}
@@ -205,56 +204,18 @@ class Board():
 
         for board in (deepcopy(self), self):
 
-            startPiece = self[startPos]
+            startPiece = board[startPos]
 
-            if targetPos in startPiece.getStandardMoves(board):
-
-                capture = False 
-                if not isinstance(board[targetPos], _Empty):
-                    capture = True
-                    board.swapPositions(startPos, targetPos)
-                    board[startPos] = _Empty()
-                    # board[startPos], board[targetPos] = _Empty(), startPiece
-                else:
-                    board.swapPositions(startPos, targetPos)
-                    # board[startPos], board[targetPos] = targetPiece, startPiece
-
-                startPiece.move(targetPos)
-
-                notation = createNotation(board, startPiece, startPos, targetPos, isPawn=isinstance(startPiece, Pawn), capture=capture)
-
-            else:
-                for specificMove in board.moveDict[startPiece.color]:
-
-                    if targetPos in specificMove.getApplicableMoves(startPiece, board):
-                        notation = specificMove.action(startPiece, targetPos, board)
+            for move in board.moveDict[startPiece.color]:
+                if move.pieceCondition(startPiece):
+                    if targetPos in move.getDestinations(startPiece, board):
+                        notation = move.action(startPiece, targetPos, board)
 
                         if checkForCheck:
                             board.checkForCheck(ignoreMate=not checkForMate)
-
                             if not ignoreCheck and board.checkDict[startPiece.color]:
                                 raise Check(startPos, targetPos)
-
                         break
-
-                else:
-                    raise IllegalMove(startPos, targetPos)
-
-
-
-
-
-            for  in board.moves:
-                if raw or rule.condition(**allParams):
-                    notation = rule.action(**allParams)
-
-                    if checkForCheck:
-                        board.checkForCheck(ignoreMate=not checkForMate)
-
-                        if not ignoreCheck and board.checkDict[startPiece.color]:
-                            raise Check(startPos, targetPos)
-
-                    break
             else:
                 raise IllegalMove(startPos, targetPos)
 
@@ -318,23 +279,19 @@ class Board():
         piece.position = None
 
 
-def init_classic(*moves):
-    board = Board(8,8, moveList=moves)
-
+def initClassic(**moveDict):
+    board = Board(8,8, moveDict=moveDict)
     return board
 
 
-def init_4P(*moves):
-    board = Board(14,14, moveList=moves)
-
+def init4P(**moveDict):
+    board = Board(14,14, moveDict=moveDict)
     board.disablePositions([
         (0,0), (0,1), (1,0), (1,1), (0,2), (2,0), (1,2), (2,1), (2,2),
         (11,13), (13,11), (11,11), (12,11), (11,12), (12,12), (12,13), (13,12), (13,13),
         (0,13), (0,12), (0,11), (1,13), (1,12), (1,11), (2,13), (2,12), (2,11),
         (13,0), (12,0), (11,0), (13,1), (12,1), (11,1), (13,2), (12,2), (11,2)])
-
     return board
-
 
 
 if __name__ == "__main__":

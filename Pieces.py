@@ -29,18 +29,13 @@ class Piece(ABC):
         """Returns standard destinations of piece in board"""
         raise NotImplementedError
 
-    def getSpecificMoves(self, board):
+    def getMoves(self, board):
         """Returns board-specific moves of piece in board"""
         destList = []
-        for move in board.moveDict(self.color):
-            if move.pieceCondition(self, board):
-                destList.extend(move.getDestinations)
+        for move in board.moveDict[self.color]:
+            if move.pieceCondition(self):
+                destList.extend(move.getDestinations(self, board))
         return destList
-
-    @abstractmethod
-    def getMoves(self, board):
-        """Returns all possible destinations of piece in board"""
-        raise NotImplementedError
 
     def move(self, destPos):
         """Move piece"""
@@ -119,7 +114,6 @@ class Pawn(Piece):
         Returns list of possible destinations
         """
         destList = []
-
         dest = self.getDest(*self.forward)
         if self.canWalk(dest, board):
             destList.append(dest)
@@ -131,18 +125,14 @@ class Pawn(Piece):
         for dest in self.getAttacking(board):
             if self.canCapture(dest, board):
                 destList.append(dest)
-
         return destList
-
-    def getMoves(self, board):
-        return [*self.getStandardMoves(board), *self.getSpecialMoves(boar)]
 
     def move(self, pos):
         if self.firstMove:
-            if (abs(pos[0] - self.position[0]) == 2
+            if ((abs(pos[0] - self.position[0]) == 2
                 and pos[1] == self.position[1])
                 or (abs(pos[1] - self.position[1]) == 2
-                and pos[0] == self.position[0]):
+                and pos[0] == self.position[0])):
 
                 self.passed = True
 
@@ -171,9 +161,6 @@ class Rook(Piece):
             board, colIter=infiRange(-1, step=-1)))
         return destList
 
-    def getMoves(self board):
-        return [*self.getStandardMoves, *self.getSpecificMoves]
-
 
 class Knight(Piece):
     def __init__(self, color):
@@ -197,9 +184,6 @@ class Knight(Piece):
                 destList.append(dest)
         return destList
 
-    def getMoves(self, board):
-        return [*self.getStandardMoves, *self.getSpecificMoves]
-
 
 class Bishop(Piece):
     def __init__(self, color):
@@ -217,9 +201,6 @@ class Bishop(Piece):
         destList.extend(self._getMovesInLine(board,
             rowIter=infiRange(-1, step=-1), colIter=infiRange(-1, step=-1)))
         return destList
-
-    def getMoves(self, board):
-        return [*self.getStandardMoves, *self.getSpecificMoves]
 
 
 class King(Piece):
@@ -243,9 +224,6 @@ class King(Piece):
             if self.canMove(dest, board):
                 destList.append(dest)
         return destList
-
-    def getMoves(self, board):
-        return[*self.getStandardMoves, *self.getSpecificMoves]
 
 
 class Queen(Piece):
@@ -272,13 +250,10 @@ class Queen(Piece):
             rowIter=infiRange(-1, step=-1), colIter=infiRange(-1, step=-1)))
         return destList
 
-    def getMoves(self, board):
-        return [*self.getStandardMoves, *self.getSpecificMoves]
-
 
 class _Disabled():
     def __str__(self):
-        return " "
+        return "  "
 
 
 class _Empty():

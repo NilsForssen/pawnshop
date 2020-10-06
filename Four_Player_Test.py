@@ -1,11 +1,8 @@
-from ChessBoard import Board, init_4P
-from StandardSetups import four_player_pieces
-from Moves import Castle_K, Castle_Q, _Standard, En_Passant
+from StandardSetups import fourPlayer
 from Utils import toChessPosition
 from Exceptions import *
 
-board = init_4P(_Standard, Castle_K, Castle_Q, En_Passant)
-board.pieceSetup(four_player_pieces.items())
+board = fourPlayer()
 
 def move(start, target, **kwargs):
     print(board.movePiece(toChessPosition(start, board), toChessPosition(target, board), **kwargs))
@@ -26,5 +23,6 @@ move("h2", "h3")
 
 move("g2", "g1")
 
-move("b5", "d5")
+move("b5", "c5")
+
 print(board)

@@ -20,7 +20,7 @@ def _positivePos(func):
     return wrapper
 
 
-def unpackIndexSlices(self, idx):
+def unpackIndexSlices(idx):
     try:
         r, c = idx
     except (TypeError, ValueError):
@@ -88,7 +88,7 @@ def createNotation(board, startPiece, targetPos, isPawn=False, capture=False):
 
         notation = startPiece.symbol
         for piece in board.pieceDict[startPiece.color]:
-            if not piece is startPiece and isinstance(piece, startPiece):
+            if not piece is startPiece and isinstance(piece, type(startPiece)):
                 if targetPos in piece.getMoves(board):
                     if piece.position[1] == startPiece.position[1]:
                         notation += formatNum(startPiece.position[0], board)

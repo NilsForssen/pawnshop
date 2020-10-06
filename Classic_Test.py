@@ -1,11 +1,8 @@
-from ChessBoard import Board, init_classic
-from StandardSetups import classic_pieces
-from Moves import Castle_K, Castle_Q, _Standard, En_Passant
+from StandardSetups import classic
 from Utils import toChessPosition
 from Exceptions import *
 
-board = init_classic(_Standard, Castle_K, Castle_Q, En_Passant)
-board.pieceSetup(classic_pieces.items())
+board = classic()
 
 def move(start, target, **kwargs):
     print(board.movePiece(toChessPosition(start, board), toChessPosition(target, board), **kwargs))
@@ -119,7 +116,7 @@ except IllegalMove:
 move("d3", "f5")
 
 # print(board.movePiece((7,4), (7,0)))
-move("e1", "a1")
+move("e1", "c1")
 
 move("d4", "e5")
 
