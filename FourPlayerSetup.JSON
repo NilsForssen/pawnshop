@@ -1,0 +1,45 @@
+{
+    "rows": 8,
+    "cols": 8,
+    "disabled": [],
+    "pieces": {
+        "yellow": {
+            "Pawn": "a1",
+            "Pawn": "a1",
+            "Pawn": "a1",
+            "Pawn": "a1",
+            "Pawn": "a1",
+            "Pawn": "a1",
+            "Pawn": "a1"
+        },
+        "red": {
+            "Pawn": "a1",
+            "Pawn": "a1",
+            "Pawn": "a1",
+            "Pawn": "a1",
+            "Pawn": "a1",
+            "Pawn": "a1",
+            "Pawn": "a1"
+        },
+        "red": {
+
+        },
+        "green": {
+
+        },
+        "blue": {
+        }
+    },
+    "moves": {
+        "yellow": ["Standard", "CastleK", "CastleQ", "EnPassant"],
+        "red": ["Standard", "CastleK", "CastleQ", "EnPassant"],
+        "green": ["Standard", "CastleK", "CastleQ", "EnPassant"],
+        "blue": ["Standard", "CastleK", "CastleQ", "EnPassant"]
+    },
+    "promote": {
+        "yellow": ["Queen", "Rook", "Knight", "Bishop"],
+        "red": ["Queen", "Rook", "Knight", "Bishop"],
+        "green": ["Queen", "Rook", "Knight", "Bishop"],
+        "blue": ["Queen", "Rook", "Knight", "Bishop"]
+    }
+}
