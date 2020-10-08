@@ -1,5 +1,5 @@
 from copy import deepcopy, copy
-from Pieces import King, _Disabled, _Empty
+from Pieces import _Empty, Queen, King, Bishop, Pawn, Knight, Rook, _Disabled
 from Exceptions import *
 from Utils import countAlpha, unpackIndexSlices
 
@@ -74,7 +74,7 @@ class Board():
 
                 if not isinstance(item2, _Empty):
 
-                    if item2 in [p for pList in self.pieceDict.values() for p in pList]:   
+                    if item2 in [p for pList in self.pieceDict.values() for p in pList]:
                         pass
                     else:
                         self._addPiece(item2, (row, col))
@@ -82,7 +82,7 @@ class Board():
             self._board[row][col] = item2
 
 
-    def __getitem__(self, index): 
+    def __getitem__(self, index):
 
         rows, cols = unpackIndexSlices(index)
         res = []
@@ -101,6 +101,18 @@ class Board():
         self._board = [[_Empty() for col in range(self.cols)] for row in range(self.rows)]
 
     def resetPieces(self):
+        self.promoteTo = {
+            "white": [Queen, Knight, Bishop, Rook],
+            "black": [Queen, Knight, Bishop, Rook]
+        }
+        self.promoteFrom = {
+            "white": [Pawn],
+            "black": [Pawn]
+        }
+        self.promoteAt = {
+            "white": 8,
+            "black": 8
+        }
         self.pieceDict = {}
         self.kingDict = {}
         self.checkDict = {}
@@ -172,15 +184,18 @@ class Board():
                     for move in self[alliedPos].getMoves(self):
 
                         try:
-                            self.movePiece(alliedPos, move, raw=True, ignoreMate=True, testMove=True, checkForMate=False)
-
+                            for pieceType in [None, *self.promoteTo[color]]:
+                                try:
+                                    self.movePiece(alliedPos, move, raw=True, ignoreMate=True, testMove=True, checkForMate=False, promote=pieceType)
+                                except PromotionError:
+                                    continue
                         except Check:
                             pass
 
                         else:
                             self.checkMateDict[color] = False
                             break
-                            
+
                     else:
                         continue
 
@@ -192,7 +207,10 @@ class Board():
                 self.checkDict[color] = True
 
 
-    def movePiece(self, startPos, targetPos, raw=False, ignoreCheck=False, ignoreMate=False, testMove=False, checkForCheck=True, checkForMate=True, **kwargs):
+    def movePiece(self, startPos, targetPos,
+        raw=False, ignoreCheck=False, ignoreMate=False,
+        testMove=False, checkForCheck=True, checkForMate=True,
+        promote=None,  **kwargs):
 
         startPiece = self[startPos]
 
@@ -215,7 +233,19 @@ class Board():
                             board.checkForCheck(ignoreMate=not checkForMate)
                             if not ignoreCheck and board.checkDict[startPiece.color]:
                                 raise Check(startPos, targetPos)
+
+                        # Check if piece is pawn and is set for promotion.
+                        # Raise Error if a piece is set to promote
+                        # but promote argument was not passed.
+                        if startPiece in self.promoteFrom[startPiece.color] and startPiece.rank == self.promoteAt[startPiece.color]:
+                            if promote is None or not promote in self.promoteTo[startPiece.color]:
+                                raise PromotionError(startPiece.position)
+                            else:
+                                board[startPiece.position] = promote(startPiece.color)
+                                board[startPiece.position].move(startPiece.position)
+                                break
                         break
+
             else:
                 raise IllegalMove(startPos, targetPos)
 
@@ -226,16 +256,16 @@ class Board():
             for color in self.checkDict.keys():
                 if self.checkMateDict[color]:
                     print(f"{color} in Checkmate!")
-                    if not "#" in notation: 
+                    if not "#" in notation:
                         notation += "#"
 
                 elif self.checkDict[color]:
                     print(f"{color} in Check!")
-                    if not "+" in notation: 
+                    if not "+" in notation:
                         notation += "+"
 
             for piece in [p for pList in self.pieceDict.values() for p in pList]:
-                
+
                 if not piece is startPiece:
                     piece.postAction(board)
 

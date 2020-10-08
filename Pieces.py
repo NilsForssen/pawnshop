@@ -103,6 +103,7 @@ class Pawn(Piece):
 
         self.passed = False
         self.direction = direction.lower()
+        self.rank = 1
 
         if direction in _directions.keys():
             self.forward, self.diagL, self.diagR = _directions[direction]
@@ -135,6 +136,8 @@ class Pawn(Piece):
                 and pos[0] == self.position[0])):
 
                 self.passed = True
+                self.rank += 1
+        self.rank += 1
 
         super().move(pos)
 
