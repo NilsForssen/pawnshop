@@ -4,30 +4,52 @@
     "disabled": [],
     "pieces": {
         "white": {
-            "Pawn": "a1",
-            "Pawn": "a1",
-            "Pawn": "a1",
-            "Pawn": "a1",
-            "Pawn": "a1",
-            "Pawn": "a1",
-            "Pawn": "a1"
+            "Rook": "a1",
+            "Knight": "b1",
+            "Bishop": "c1",
+            "Queen": "d1",
+            "King": "e1",
+            "Bishop": "f1",
+            "Knight": "g1",
+            "Rook": "h1",
+            "Pawn": "a2",
+            "Pawn": "b2",
+            "Pawn": "c2",
+            "Pawn": "d2",
+            "Pawn": "e2",
+            "Pawn": "f2",
+            "Pawn": "g2",
+            "Pawn": "h2"
         },
         "black": {
-            "Pawn": "a1",
-            "Pawn": "a1",
-            "Pawn": "a1",
-            "Pawn": "a1",
-            "Pawn": "a1",
-            "Pawn": "a1",
-            "Pawn": "a1"
+            "Rook": "a8",
+            "Knight": "b8",
+            "Bishop": "c8",
+            "Queen": "d8",
+            "King": "e8",
+            "Bishop": "f8",
+            "Knight": "g8",
+            "Rook": "h7",
+            "Pawn": "a7",
+            "Pawn": "b7",
+            "Pawn": "c7",
+            "Pawn": "d7",
+            "Pawn": "e7",
+            "Pawn": "f7",
+            "Pawn": "g7",
+            "Pawn": "h7"
         }
     },
     "moves": {
         "white": ["Standard", "CastleK", "CastleQ", "EnPassant"],
         "black": ["Standard", "CastleK", "CastleQ", "EnPassant"]
     },
-    "promote": {
+    "promoteto": {
         "white": ["Queen", "Rook", "Knight", "Bishop"],
         "black": ["Queen", "Rook", "Knight", "Bishop"]
+    },
+    "promotefrom": {
+        "white": ["Pawn"],
+        "black": ["Pawn"]
     }
 }

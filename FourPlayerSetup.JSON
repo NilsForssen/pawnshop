@@ -3,43 +3,95 @@
     "cols": 8,
     "disabled": [],
     "pieces": {
-        "yellow": {
-            "Pawn": "a1",
-            "Pawn": "a1",
-            "Pawn": "a1",
-            "Pawn": "a1",
-            "Pawn": "a1",
-            "Pawn": "a1",
-            "Pawn": "a1"
-        },
         "red": {
-            "Pawn": "a1",
-            "Pawn": "a1",
-            "Pawn": "a1",
-            "Pawn": "a1",
-            "Pawn": "a1",
-            "Pawn": "a1",
-            "Pawn": "a1"
-        },
-        "red": {
-
-        },
-        "green": {
-
+            "Rook": "d1",
+            "Knight": "e1",
+            "Bishop": "f1",
+            "Queen": "g1",
+            "King": "h1",
+            "Bishop": "i1",
+            "Knight": "j1",
+            "Rook": "k1",
+            "Pawn": "d2",
+            "Pawn": "e2",
+            "Pawn": "f2",
+            "Pawn": "g2",
+            "Pawn": "h2",
+            "Pawn": "i2",
+            "Pawn": "j2",
+            "Pawn": "k2"
         },
         "blue": {
+            "Rook": "a11",
+            "Knight": "a10",
+            "Bishop": "a9",
+            "Queen": "a8",
+            "King": "a7",
+            "Bishop": "a6",
+            "Knight": "a5",
+            "Rook": "a4",
+            "Pawn": "b11",
+            "Pawn": "b10",
+            "Pawn": "b9",
+            "Pawn": "b8",
+            "Pawn": "b7",
+            "Pawn": "b6",
+            "Pawn": "b5",
+            "Pawn": "b4"
+        },
+        "yellow": {
+            "Rook": "d14",
+            "Knight": "e14",
+            "Bishop": "f14",
+            "Queen": "g14",
+            "King": "h14",
+            "Bishop": "i14",
+            "Knight": "j14",
+            "Rook": "k14",
+            "Pawn": "d13",
+            "Pawn": "e13",
+            "Pawn": "f13",
+            "Pawn": "g13",
+            "Pawn": "h13",
+            "Pawn": "i13",
+            "Pawn": "j13",
+            "Pawn": "k13"
+        },
+        "green": {
+            "Rook": "n11",
+            "Knight": "n10",
+            "Bishop": "n9",
+            "Queen": "n8",
+            "King": "n7",
+            "Bishop": "n6",
+            "Knight": "n5",
+            "Rook": "n4",
+            "Pawn": "m11",
+            "Pawn": "m10",
+            "Pawn": "m9",
+            "Pawn": "m8",
+            "Pawn": "m7",
+            "Pawn": "m6",
+            "Pawn": "m5",
+            "Pawn": "m4"
         }
     },
     "moves": {
-        "yellow": ["Standard", "CastleK", "CastleQ", "EnPassant"],
         "red": ["Standard", "CastleK", "CastleQ", "EnPassant"],
-        "green": ["Standard", "CastleK", "CastleQ", "EnPassant"],
-        "blue": ["Standard", "CastleK", "CastleQ", "EnPassant"]
+        "blue": ["Standard", "CastleK", "CastleQ", "EnPassant"],
+        "yellow": ["Standard", "CastleK", "CastleQ", "EnPassant"],
+        "green": ["Standard", "CastleK", "CastleQ", "EnPassant"]
     },
-    "promote": {
-        "yellow": ["Queen", "Rook", "Knight", "Bishop"],
+    "promoteto": {
         "red": ["Queen", "Rook", "Knight", "Bishop"],
-        "green": ["Queen", "Rook", "Knight", "Bishop"],
-        "blue": ["Queen", "Rook", "Knight", "Bishop"]
+        "blue": ["Queen", "Rook", "Knight", "Bishop"],
+        "yellow": ["Queen", "Rook", "Knight", "Bishop"],
+        "green": ["Queen", "Rook", "Knight", "Bishop"]
+    },
+    "promotefrom": {
+        "red": ["Pawn"],
+        "blue": ["Pawn"],
+        "yellow": ["Pawn"],
+        "green": ["Pawn"]
     }
 }
