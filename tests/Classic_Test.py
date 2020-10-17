@@ -1,11 +1,23 @@
-from StandardSetups import classic
-from Utils import toChessPosition
-from Exceptions import *
+# Classic_Test.py
 
-board = classic()
+if __name__ == '__main__' and __package__ is None:
+    from os import sys, path
+    sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
+
+from ChessBoard import initClassic
+from Pieces import *
+from Exceptions import *
+from ChessVector import ChessVector
+
+
+board = initClassic()
+
+print(board)
+
 
 def move(start, target, **kwargs):
-    print(board.movePiece(toChessPosition(start, board), toChessPosition(target, board), **kwargs))
+    print(board.movePiece(ChessVector(start, board), ChessVector(target, board), **kwargs))
+
 
 # print(board.movePiece((6,0), (5,0)))
 move("a2", "a3")
@@ -82,7 +94,6 @@ except CheckMate:
     print("Test Success")
 
 # Just some white moves to Castle
-
 # print(board.movePiece((6,3), (4,3), ignoreCheck=True, ignoreMate=True))
 move("d2", "d4", ignoreCheck=True, ignoreMate=True)
 
@@ -141,6 +152,14 @@ move("f5", "h5")
 move("f7", "f5")
 
 move("e5", "f6")
+
+move("e7", "e8")
+
+move("f6", "f7")
+
+move("f7", "f8", promote=Queen)
+
+move("e8", "f8")
 
 print(board)
 

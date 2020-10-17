@@ -1,5 +1,5 @@
-Chess_main.py
-
+# Package init
+__init__.py
 
 # Cache files for Sublime Text
 *.tmlanguage.cache

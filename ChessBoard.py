@@ -1,23 +1,18 @@
 from copy import deepcopy, copy
-from Pieces import _Empty, Queen, King, Bishop, Pawn, Knight, Rook, _Disabled
+from Utils import getResourcePath, countAlpha, unpackIndexSlices
 from Exceptions import *
-from Utils import countAlpha, unpackIndexSlices
+
+from configurations import ClassicConfig, FourPlayerConfig
+import json
+import os
+from Pieces import *
+
 
 class Board():
-    def __init__(self, rows, cols, moveDict):
-        self.rows = rows
-        self.cols = cols
-
-        self.resetBoard()
-        self.resetPieces()
-        self.moves = []
-        self.history = []
-
-        self.moveDict = moveDict
-
+    def __init__(self):
+        pass
 
     def __str__(self):
-
         string = "\n"
         ending = "\t|\n\n\t\t__" + ("\t__" * self.cols) + "\n\n\t\t"
         alpha = countAlpha()
@@ -37,147 +32,123 @@ class Board():
 
         return string + ending + "\n\n"
 
-
     def __setitem__(self, index, item):
-
-        rows, cols = unpackIndexSlices(index)
-
-        idxList = []
-
-        for rowIdx in range(rows.start, rows.stop, rows.step or 1):
-            for colIdx in range(cols.start, cols.stop, cols.step or 1):
-                idxList.append((rowIdx, colIdx))
 
         try:
             iter(item)
         except TypeError:
             item = [item]
 
-        expectedLen = len(idxList)
-        givenLen = len(item) or 1
+        try:
+            iter(index)
+        except TypeError:
+            index = [index]
 
-        if expectedLen != givenLen:
-            raise ValueError("List index expected {0} values to unpack but {1} were given".format(expectedLen, givenLen))
+        if len(index) != len(item):
+            raise ValueError("List index expected {0} values to unpack but {1} were given".format(
+                expectedLen, givenLen))
 
-        for i, (row, col) in enumerate(idxList):
+        for i, vec in enumerate(index):
 
-            if isinstance(self._board[row][col], _Disabled):
-                raise DisabledError((row, col))
+            if isinstance(self._board[vec.row][vec.col], Disabled):
+                raise DisabledError(vec.getStr(self))
 
-            item1 = self._board[row][col]
+            item1 = self._board[vec.row][vec.col]
             item2 = item[i]
 
-            if not isinstance(item2, _Disabled):
+            if not isinstance(item2, Disabled):
 
-                if not isinstance(item1, _Empty):
+                if not isinstance(item1, Empty):
                     self._removePiece(item1)
 
-                if not isinstance(item2, _Empty):
+                if not isinstance(item2, Empty):
 
-                    if item2 in [p for pList in self.pieceDict.values() for p in pList]:
+                    if item2 in [p for pList in self.pieces.values() for p in pList]:
                         pass
                     else:
-                        self._addPiece(item2, (row, col))
+                        self._addPiece(item2, vec)
 
-            self._board[row][col] = item2
-
+            self._board[vec.row][vec.col] = item2
 
     def __getitem__(self, index):
-
-        rows, cols = unpackIndexSlices(index)
         res = []
 
-        for rowIdx in range(rows.start, rows.stop, rows.step or 1 ):
-            for colIdx in range(cols.start, cols.stop, cols.step or 1):
-                if isinstance(self._board[rowIdx][colIdx], _Disabled):
-                    raise DisabledError((rowIdx, colIdx))
-                res.append(self._board[rowIdx][colIdx])
+        try:
+            iter(index)
+        except TypeError:
+            index = [index]
 
+        for vec in index:
+            if isinstance(self._board[vec.row][vec.col], Disabled):
+                raise DisabledError(vec.getStr(self))
+            res.append(self._board[vec.row][vec.col])
 
-        if len(res) == 1: return res.pop()
-        else: return res
+        if len(res) == 1:
+            return res.pop()
+        else:
+            return res
 
-    def resetBoard(self):
-        self._board = [[_Empty() for col in range(self.cols)] for row in range(self.rows)]
+    def setup(self, config={}):
+        with open(getResourcePath(__file__, "configurations/DefaultConfig.JSON"), "r") as default:
+            dConfig = json.load(default)
 
-    def resetPieces(self):
-        self.promoteTo = {
-            "white": [Queen, Knight, Bishop, Rook],
-            "black": [Queen, Knight, Bishop, Rook]
-        }
-        self.promoteFrom = {
-            "white": [Pawn],
-            "black": [Pawn]
-        }
-        self.promoteAt = {
-            "white": 8,
-            "black": 8
-        }
-        self.pieceDict = {}
-        self.kingDict = {}
-        self.checkDict = {}
-        self.checkMateDict = {}
+            self.rows = config.get("rows") or dConfig.get("rows ")
+            self.cols = config.get("cols") or dConfig.get("cols")
+            self.pieces = config.get("pieces") or dConfig.get("pieces")
+            self.moves = config.get("moves") or dConfig.get("moves")
+            self.promoteTo = config.get("promoteTo") or dConfig.get("promoteTo")
+            self.promoteFrom = config.get("promoteFrom") or dConfig.get("promoteFrom")
+            self.promoteAt = config.get("promoteAt") or dConfig.get("promteAt")
 
+            self._board = [[Empty() for _ in range(self.cols)] for _ in range(self.rows)]
 
-    def swapPositions(self, pos1, pos2):
+            for color, pieceList in self.pieces.items():
+                for piece in pieceList:
+                    self[piece.vector] = piece
 
-        self._board[pos1[0]][pos1[1]], self._board[pos2[0]][pos2[1]] = self._board[pos2[0]][pos2[1]], self._board[pos1[0]][pos1[1]]
+            for vec in config.get("disabled") or dConfig.get("disabled"):
+                self[vector] = Disabled()
 
-
-    def disablePositions(self, posList):
-        for pos in posList:
-            self[pos] = _Disabled()
-
-
-    def isEmpty(self, pos):
-        return isinstance(self[pos], _Empty)
-
-
-    def evalBoard(self):
-        return dict([(k, 0) for k in self.colorList])
-
-
-    def pieceSetup(self, pieceZip):
-
-        self.resetPieces()
-
-        for piece, pos in pieceZip:
-
-            self[pos] = piece
+        self.checks = {key: False for key in self.pieces.keys()}
+        self.checkmates = copy(self.checks)
+        self.kings = {key: [piece for piece in self.pieces[key] if isinstance(piece, King)] for key in self.pieces.keys()}
+        self.history = []
 
         self.checkForCheck()
 
+    def swapPositions(self, vec1, vec2):
+        self._board[vec1.row][vec1.col], self._board[vec2.row][vec2.col] = self._board[vec2.row][vec2.col], self._board[vec1.row][vec1.col]
 
-    def isThreatened(self, pos, alliedColor):
+    def isEmpty(self, vector):
+        return isinstance(self[vector], Empty)
 
-        hostilePieces = [piece for col, pList in self.pieceDict.items() if col != alliedColor for piece in pList]
+    def isThreatened(self, vector, alliedColor):
+        hostilePieces = [piece for col, pList in self.pieces.items() if col != alliedColor for piece in pList]
 
         for hp in hostilePieces:
             hostile = hp.getMoves(self)
-            if pos in hostile:
+            if vector in hostile:
                 return True
         else:
             return False
 
-
     def checkForCheck(self, ignoreMate=False):
 
-        colorList = list(self.pieceDict.keys())
+        colorList = list(self.pieces.keys())
 
-        for color in self.pieceDict.keys():
+        for color in self.pieces.keys():
 
-            for alliedKing in self.kingDict[color]:
+            for alliedKing in self.kings[color]:
 
-                if self.isThreatened(alliedKing.position, color):
-                    self.checkDict[color] = True
+                if self.isThreatened(alliedKing.vector, color):
+                    self.checks[color] = True
                     break
             else:
-                self.checkDict[color] = False
+                self.checks[color] = False
 
+            if self.checks[color] and not ignoreMate:
 
-            if self.checkDict[color] and not ignoreMate:
-
-                alliedPiecesPos = map(lambda p : p.position, self.pieceDict[color])
+                alliedPiecesPos = map(lambda p: p.vector, self.pieces[color])
 
                 for alliedPos in list(alliedPiecesPos):
 
@@ -186,14 +157,15 @@ class Board():
                         try:
                             for pieceType in [None, *self.promoteTo[color]]:
                                 try:
-                                    self.movePiece(alliedPos, move, raw=True, ignoreMate=True, testMove=True, checkForMate=False, promote=pieceType)
+                                    self.movePiece(alliedPos, move, raw=True, ignoreMate=True,
+                                                   testMove=True, checkForMate=False, promote=pieceType)
                                 except PromotionError:
                                     continue
                         except Check:
                             pass
 
                         else:
-                            self.checkMateDict[color] = False
+                            self.checkmates[color] = False
                             break
 
                     else:
@@ -202,69 +174,71 @@ class Board():
                     break
 
                 else:
-                    self.checkMateDict[color] = True
+                    self.checkmates[color] = True
 
-                self.checkDict[color] = True
+                self.checks[color] = True
 
+    def movePiece(self, startVec, targetVec,
+                  raw=False, ignoreCheck=False, ignoreMate=False,
+                  testMove=False, checkForCheck=True, checkForMate=True,
+                  promote=None, **kwargs):
 
-    def movePiece(self, startPos, targetPos,
-        raw=False, ignoreCheck=False, ignoreMate=False,
-        testMove=False, checkForCheck=True, checkForMate=True,
-        promote=None,  **kwargs):
+        if self.isEmpty(startVec):
+            raise EmptyError(startVec.getStr(self))
 
-        startPiece = self[startPos]
+        startPiece = self[startVec]
 
-        if isinstance(startPiece, _Empty):
-            raise EmptyError(startPos)
-
-        if self.checkMateDict[startPiece.color] and not ignoreMate:
-            raise CheckMate(startPiece.color)
+        if self.checkmates[startPiece.color] and not ignoreMate:
+            raise CheckMate
 
         for board in (deepcopy(self), self):
 
-            startPiece = board[startPos]
+            startPiece = board[startVec]
 
-            for move in board.moveDict[startPiece.color]:
+            for move in board.moves[startPiece.color]:
                 if move.pieceCondition(startPiece):
-                    if targetPos in move.getDestinations(startPiece, board):
-                        notation = move.action(startPiece, targetPos, board)
+                    if targetVec in move.getDestinations(startPiece, board):
+                        notation = move.action(startPiece, targetVec, board)
+                        for pieceType in self.promoteFrom[startPiece.color]:
+                            if isinstance(startPiece, pieceType):
+                                if startPiece.rank == self.promoteAt[startPiece.color]:
+                                    if promote is None:
+                                        raise PromotionError
+                                    elif not promote in self.promoteTo[startPiece.color]:
+                                        raise PromotionError(
+                                            f"{startPiece.color} cannot promote to {promote}!")
+                                    else:
+                                        newPiece = promote(startPiece.color)
+                                        newPiece.move(startPiece.vector)
+                                        board[startPiece.vector] = newPiece
+                                break
 
                         if checkForCheck:
                             board.checkForCheck(ignoreMate=not checkForMate)
-                            if not ignoreCheck and board.checkDict[startPiece.color]:
-                                raise Check(startPos, targetPos)
+                            if not ignoreCheck and board.checks[startPiece.color]:
+                                raise Check
 
-                        # Check if piece is pawn and is set for promotion.
-                        # Raise Error if a piece is set to promote
-                        # but promote argument was not passed.
-                        if startPiece in self.promoteFrom[startPiece.color] and startPiece.rank == self.promoteAt[startPiece.color]:
-                            if promote is None or not promote in self.promoteTo[startPiece.color]:
-                                raise PromotionError(startPiece.position)
-                            else:
-                                board[startPiece.position] = promote(startPiece.color)
-                                board[startPiece.position].move(startPiece.position)
-                                break
                         break
 
             else:
-                raise IllegalMove(startPos, targetPos)
+                raise IllegalMove(startVec.getStr(self), targetVec.getStr(self))
 
             if testMove:
                 break
 
         if not testMove:
-            for color in self.checkDict.keys():
-                if self.checkMateDict[color]:
+            for color in self.checks.keys():
+                if self.checkmates[color]:
                     print(f"{color} in Checkmate!")
                     if not "#" in notation:
                         notation += "#"
 
-                elif self.checkDict[color]:
+                elif self.checks[color]:
                     print(f"{color} in Check!")
                     if not "+" in notation:
                         notation += "+"
 
-            for piece in [p for pList in self.pieceDict.values() for p in pList]:
+            for piece in [p for pList in self.pieces.values() for p in pList]:
 
                 if not piece is startPiece:
                     piece.postAction(board)
@@ -273,54 +247,49 @@ class Board():
 
         return notation
 
+    def _addPiece(self, piece, vector):
 
-    def _addPiece(self, piece, pos):
+        if not piece.color in self.pieces:
+            self.pieces[piece.color] = []
+            self.kings[piece.color] = []
+            self.checks[piece.color] = False
+            self.checkmates[piece.color] = False
 
-        if not piece.color in self.pieceDict:
-            self.pieceDict[piece.color] = []
-            self.kingDict[piece.color] = []
-            self.checkDict[piece.color] = False
-            self.checkMateDict[piece.color] = False
-
-        self.pieceDict[piece.color].append(piece)
+        self.pieces[piece.color].append(piece)
 
         if isinstance(piece, King):
-            self.kingDict[piece.color].append(piece)
+            self.kings[piece.color].append(piece)
 
-        piece.position = pos
-
+        piece.vector = vector
 
     def _removePiece(self, piece):
 
         try:
-            self.pieceDict[piece.color].remove(piece)
+            self.pieces[piece.color].remove(piece)
 
-            if isinstance(piece, King) and piece in self.kingDict[piece.color]:
-                self.kingDict[piece.color].remove(piece)
+            if isinstance(piece, King) and piece in self.kings[piece.color]:
+                self.kings[piece.color].remove(piece)
 
-            if not self.pieceDict[piece.color]:
-                self.pieceDict.pop(piece.color)
-                self.kingDict.pop(piece.color)
-                self.checkDict.pop(piece.color)
-                self.checkMateDict.pop(piece.color)
-        except:
+            if not self.pieces[piece.color]:
+                self.pieces.pop(piece.color)
+                self.kings.pop(piece.color)
+                self.checks.pop(piece.color)
+                self.checkmates.pop(piece.color)
+        except Exception:
             print("cant remove piece for some reason")
 
-        piece.position = None
+        piece.vector = None
 
 
-def initClassic(**moveDict):
-    board = Board(8,8, moveDict=moveDict)
+def initClassic():
+    board = Board()
+    board.setup(ClassicConfig.CONFIG)
     return board
 
 
-def init4P(**moveDict):
-    board = Board(14,14, moveDict=moveDict)
-    board.disablePositions([
-        (0,0), (0,1), (1,0), (1,1), (0,2), (2,0), (1,2), (2,1), (2,2),
-        (11,13), (13,11), (11,11), (12,11), (11,12), (12,12), (12,13), (13,12), (13,13),
-        (0,13), (0,12), (0,11), (1,13), (1,12), (1,11), (2,13), (2,12), (2,11),
-        (13,0), (12,0), (11,0), (13,1), (12,1), (11,1), (13,2), (12,2), (11,2)])
+def init4P():
+    board = Board()
+    board.setup(FourPlayerConfig.CONFIG)
     return board
 
 

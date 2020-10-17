@@ -44,11 +44,11 @@
         "white": ["Standard", "CastleK", "CastleQ", "EnPassant"],
         "black": ["Standard", "CastleK", "CastleQ", "EnPassant"]
     },
-    "promoteto": {
+    "promoteTo": {
         "white": ["Queen", "Rook", "Knight", "Bishop"],
         "black": ["Queen", "Rook", "Knight", "Bishop"]
     },
-    "promotefrom": {
+    "promoteFrom": {
         "white": ["Pawn"],
         "black": ["Pawn"]
     }

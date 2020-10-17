@@ -1,11 +1,19 @@
-from StandardSetups import fourPlayer
-from Utils import toChessPosition
-from Exceptions import *
+# Four_Player_Test.py
 
-board = fourPlayer()
+if __name__ == '__main__' and __package__ is None:
+    from os import sys, path
+    sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
+
+from ChessBoard import init4P
+from Utils import toChessPosition
+
+
+board = init4P()
+
 
 def move(start, target, **kwargs):
     print(board.movePiece(toChessPosition(start, board), toChessPosition(target, board), **kwargs))
+
 
 move("f2", "f3")
 

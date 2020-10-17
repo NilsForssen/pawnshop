@@ -1,21 +1,23 @@
 from abc import ABC, abstractmethod
 from Utils import (
     _catchOutofBounce,
-    _positivePos,
-    infiRange
-)
+    _positivePos)
+from ChessVector import ChessVector
 
 
 _directions = {
-    "up": ((-1,0), (-1,-1), (-1,1)),
-    "down": ((1,0), (1,1), (1,-1)),
-    "right": ((0,1), (-1,1), (1,1)),
-    "left": ((0,-1), (1,-1), (-1,-1))
+    "up": ((-1, 0), (-1, -1), (-1, 1)),
+    "down": ((1, 0), (1, 1), (1, -1)),
+    "right": ((0, 1), (-1, 1), (1, 1)),
+    "left": ((0, -1), (1, -1), (-1, -1))
 }
+
+_directions = {key: [ChessVector(offset) for offset in _directions[key]] for key in _directions}
+
 
 class Piece(ABC):
     def __init__(self, color, value, symbol):
-        self.position = None
+        self.vector = None
         self.color = color
         self.value = value
         self.symbol = symbol
@@ -32,32 +34,29 @@ class Piece(ABC):
     def getMoves(self, board):
         """Returns board-specific moves of piece in board"""
         destList = []
-        for move in board.moveDict[self.color]:
+        for move in board.moves[self.color]:
             if move.pieceCondition(self):
                 destList.extend(move.getDestinations(self, board))
         return destList
 
-    def move(self, destPos):
+    def move(self, destVector):
         """Move piece"""
-        self.position = destPos
+        self.vector = destVector
         self.firstMove = False
 
     def postAction(self, board):
         """Do something after a piece is moved"""
         pass
 
-    def getDest(self, offx, offy):
-        return (self.position[0] + offx, self.position[1] + offy)
+    @_positivePos
+    @_catchOutofBounce
+    def canWalk(self, vector, board):
+        return board.isEmpty(vector)
 
     @_positivePos
     @_catchOutofBounce
-    def canWalk(self, pos, board):
-        return board.isEmpty(pos)
-
-    @_positivePos
-    @_catchOutofBounce
-    def canCapture(self, pos, board):
-        destPiece = board[pos]
+    def canCapture(self, vector, board):
+        destPiece = board[vector]
         try:
             return destPiece.color != self.color
         except AttributeError:
@@ -65,87 +64,74 @@ class Piece(ABC):
 
     @_positivePos
     @_catchOutofBounce
-    def canMove(self, pos, board):
-        destPiece = board[pos]
+    def canMove(self, vector, board):
+        destPiece = board[vector]
         try:
             return destPiece.color != self.color
         except AttributeError:
-            return board.isEmpty(pos)
+            return board.isEmpty(vector)
 
-    def _getMovesInLine(
-        self, board,
-        rowIter=infiRange(0, step=0), colIter=infiRange(0, step=0)
-        ):
-
+    def _getMovesInLine(self, iterVector, board):
         moveList = []
-
+        newV = self.vector
         while True:
-
-            try:
-                pos = self.getDest(next(rowIter), next(colIter))
-            except StopIteration:
-                break
-
-            if self.canWalk(pos, board):
-                moveList.append(pos)
-            elif self.canCapture(pos, board):
-                moveList.append(pos)
+            newV += iterVector
+            if self.canWalk(newV, board):
+                moveList.append(newV)
+            elif self.canCapture(newV, board):
+                moveList.append(newV)
                 break
             else:
                 break
-
         return moveList
 
 
 class Pawn(Piece):
-    def __init__(self, color, direction="up"):
+    def __init__(self, color, direction="up", rank=2):
         super().__init__(color, 1, "P")
 
         self.passed = False
         self.direction = direction.lower()
-        self.rank = 1
+        self.rank = rank
 
         if direction in _directions.keys():
-            self.forward, self.diagL, self.diagR = _directions[direction]
+            self.forwardVec, self.lDiagVec, self.rDiagVec = _directions[direction]
         else:
-            raise ValueError(f"Direction is not any of {_directions.items()}")
+            raise ValueError(f"Direction is not any of {_directions.keys()}")
 
     def getStandardMoves(self, board):
         """
         Returns list of possible destinations
         """
-        destList = []
-        dest = self.getDest(*self.forward)
-        if self.canWalk(dest, board):
-            destList.append(dest)
-            if self.firstMove:
-                dest = self.getDest(*(self.forward[0]*2, self.forward[1]*2))
-                if self.canWalk(dest, board):
-                    destList.append(dest)
 
-        for dest in self.getAttacking(board):
-            if self.canCapture(dest, board):
-                destList.append(dest)
+        destList = []
+        destVec = self.vector + self.forwardVec
+        if self.canWalk(destVec, board):
+            destList.append(destVec)
+            if self.firstMove:
+                destVec += self.forwardVec
+                if self.canWalk(destVec, board):
+                    destList.append(destVec)
+
+        for destVec in self.getAttacking(board):
+            if self.canCapture(destVec, board):
+                destList.append(destVec)
+
         return destList
 
-    def move(self, pos):
+    def move(self, newV):
         if self.firstMove:
-            if ((abs(pos[0] - self.position[0]) == 2
-                and pos[1] == self.position[1])
-                or (abs(pos[1] - self.position[1]) == 2
-                and pos[0] == self.position[0])):
-
+            if abs(self.vector.row - newV.row) == 2 or abs(self.vector.col - newV.col) == 2:
                 self.passed = True
                 self.rank += 1
         self.rank += 1
-
-        super().move(pos)
+        super().move(newV)
 
     def postAction(self, board):
         passed = False
 
     def getAttacking(self, board):
-        return [self.getDest(*self.diagL), self.getDest(*self.diagR)]
+        return (self.vector + self.lDiagVec, self.vector + self.rDiagVec)
 
 
 class Rook(Piece):
@@ -154,14 +140,9 @@ class Rook(Piece):
 
     def getStandardMoves(self, board):
         destList = []
-        destList.extend(self._getMovesInLine(
-            board, rowIter=infiRange(1, step=1)))
-        destList.extend(self._getMovesInLine(
-            board, rowIter=infiRange(-1, step=-1)))
-        destList.extend(self._getMovesInLine(
-            board, colIter=infiRange(1, step=1)))
-        destList.extend(self._getMovesInLine(
-            board, colIter=infiRange(-1, step=-1)))
+        for vecTuple in _directions.values():
+            forwardVec = vecTuple[0]
+            destList.extend(self._getMovesInLine(forwardVec, board))
         return destList
 
 
@@ -172,19 +153,21 @@ class Knight(Piece):
     def getStandardMoves(self, board):
         destList = []
         offsetList = [
-            (1,2),
-            (1,-2),
-            (-1,2),
-            (-1,-2),
-            (2,1),
-            (2,-1),
-            (-2,1),
-            (-2,-1)
+            (1, 2),
+            (1, -2),
+            (-1, 2),
+            (-1, -2),
+            (2, 1),
+            (2, -1),
+            (-2, 1),
+            (-2, -1)
         ]
-        for offx, offy in offsetList:
-            dest = self.getDest(offx, offy)
-            if self.canMove(dest, board):
-                destList.append(dest)
+        vecList = [ChessVector(offset) for offset in offsetList]
+
+        for offsetVec in vecList:
+            destVec = self.vector + offsetVec
+            if self.canMove(destVec, board):
+                destList.append(destVec)
         return destList
 
 
@@ -192,17 +175,10 @@ class Bishop(Piece):
     def __init__(self, color):
         super().__init__(color, 3, "B")
 
-
     def getStandardMoves(self, board):
         destList = []
-        destList.extend(self._getMovesInLine(board,
-            rowIter=infiRange(1, step=1), colIter=infiRange(1, step=1)))
-        destList.extend(self._getMovesInLine(board,
-            rowIter=infiRange(1, step=1), colIter=infiRange(-1, step=-1)))
-        destList.extend(self._getMovesInLine(board,
-            rowIter=infiRange(-1, step=-1), colIter=infiRange(1, step=1)))
-        destList.extend(self._getMovesInLine(board,
-            rowIter=infiRange(-1, step=-1), colIter=infiRange(-1, step=-1)))
+        for vecTuple in _directions.values():
+            destList.extend(self._getMovesInLine(vecTuple[1], board))
         return destList
 
 
@@ -212,20 +188,10 @@ class King(Piece):
 
     def getStandardMoves(self, board):
         destList = []
-        offsetList = [
-            (1,0),
-            (1,1),
-            (0,1),
-            (-1,1),
-            (-1,0),
-            (-1,-1),
-            (0,-1),
-            (1,-1)
-            ]
-        for offx, offy in offsetList:
-            dest = self.getDest(offx, offy)
-            if self.canMove(dest, board):
-                destList.append(dest)
+        for offsetVec in [vec for vecList in _directions.values() for vec in vecList]:
+            destVec = self.vector + offsetVec
+            if self.canMove(destVec, board):
+                destList.append(destVec)
         return destList
 
 
@@ -235,33 +201,21 @@ class Queen(Piece):
 
     def getStandardMoves(self, board):
         destList = []
-        destList.extend(self._getMovesInLine(board,
-            rowIter=infiRange(1, step=1)))
-        destList.extend(self._getMovesInLine(board,
-            rowIter=infiRange(-1, step=-1)))
-        destList.extend(self._getMovesInLine(board,
-            colIter=infiRange(1, step=1)))
-        destList.extend(self._getMovesInLine(board,
-            colIter=infiRange(-1, step=-1)))
-        destList.extend(self._getMovesInLine(board,
-            rowIter=infiRange(1, step=1), colIter=infiRange(1, step=1)))
-        destList.extend(self._getMovesInLine(board,
-            rowIter=infiRange(1, step=1), colIter=infiRange(-1, step=-1)))
-        destList.extend(self._getMovesInLine(board,
-            rowIter=infiRange(-1, step=-1), colIter=infiRange(1, step=1)))
-        destList.extend(self._getMovesInLine(board,
-            rowIter=infiRange(-1, step=-1), colIter=infiRange(-1, step=-1)))
+        for vecTuple in _directions.values():
+            destList.extend(self._getMovesInLine(vecTuple[0], board))
+            destList.extend(self._getMovesInLine(vecTuple[1], board))
         return destList
 
 
-class _Disabled():
+class Disabled():
     def __str__(self):
         return "  "
 
 
-class _Empty():
+class Empty():
     def __str__(self):
         return "__"
+
 
 if __name__ == "__main__":
 

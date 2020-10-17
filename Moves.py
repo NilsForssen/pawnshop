@@ -1,4 +1,4 @@
-from Pieces import King, Rook, Pawn, _Empty
+from Pieces import *
 from abc import ABC, abstractclassmethod
 from Utils import createNotation
 
@@ -31,21 +31,21 @@ class Standard(Move):
         return piece.getStandardMoves(board)
 
     @classmethod
-    def action(thisMove, startPiece, targetPos, board):
+    def action(thisMove, startPiece, targetVec, board):
         capture = False
-        targetPiece = board[targetPos]
+        targetPiece = board[targetVec]
 
-        if not isinstance(targetPiece, _Empty):
+        if not isinstance(targetPiece, Empty):
             capture = True
-            board.swapPositions(startPiece.position, targetPos)
-            board[startPiece.position] = _Empty()
+            board.swapPositions(startPiece.vector, targetVec)
+            board[startPiece.vector] = Empty()
         else:
-            board.swapPositions(startPiece.position, targetPos)
+            board.swapPositions(startPiece.vector, targetVec)
 
         notation = createNotation(
-            board, startPiece, targetPos,
+            board, startPiece, targetVec,
             isPawn=isinstance(startPiece, Pawn), capture=capture)
-        startPiece.move(targetPos)
+        startPiece.move(targetVec)
         return notation
 
 
@@ -56,56 +56,56 @@ class _Castling(Move):
         return piece.firstMove and isinstance(piece, King)
 
     @classmethod
-    def action(thisMove, startPiece, targetPos, board):
+    def action(thisMove, startPiece, targetVec, board):
         for rook in thisMove.findRooks(startPiece, board):
-            between = thisMove.findBetween(startPiece.position, rook.position)
-            if targetPos in between:
+            between = thisMove.findBetween(startPiece.vector, rook.vector)
+            if targetVec in between:
                 kingTarget, rookTarget = thisMove.getTargets(between)
-                board.swapPositions(startPiece.position, kingTarget)
-                board.swapPositions(rook.position, rookTarget)
+                board.swapPositions(startPiece.vector, kingTarget)
+                board.swapPositions(rook.vector, rookTarget)
                 startPiece.move(kingTarget)
                 rook.move(rookTarget)
                 break
         else:
-            raise ValueError(f"Piece cannot move to {targetPos}")
+            raise ValueError(f"Piece cannot move to {targetVec }")
 
-    def findBetween(pos1, pos2):
-        rowStep = pos1[0] - pos2[0] and (1, -1)[pos1[0] - pos2[0] < 0]
-        colStep = pos1[1] - pos2[1] and (1, -1)[pos1[1] - pos2[1] < 0]
+    def findBetween(vec1, vec2):
+        rowStep = vec1.row - vec2.row and (1, -1)[vec1.row - vec2.row < 0]
+        colStep = vec1.col - vec2.col and (1, -1)[vec1.col - vec2.col < 0]
 
         if not rowStep:
-            colRange = range(pos2[1] + colStep, pos1[1], colStep)
-            rowRange = [pos1[0]]*len(colRange)
+            colRange = range(vec2.col + colStep, vec1.col, colStep)
+            rowRange = [vec1.row] * len(colRange)
         else:
-            rowRange = range(pos2[0] + rowStep, pos1[0], rowStep)
-            colRange = [pos1[1]]*len(rowRange)
+            rowRange = range(vec2.row + rowStep, vec1.row, rowStep)
+            colRange = [vec1.col] * len(rowRange)
 
-        return tuple(zip(rowRange, colRange))
+        return [ChessVector(idx) for idx in zip(rowRange, colRange)]
 
     def emptyBetween(board, between):
-        for pos in between:
-            if not isinstance(board[pos], _Empty):
+        for vector in between:
+            if not isinstance(board[vector], Empty):
                 return False
         else:
             return True
 
     def findRooks(piece, board):
-        def posCondition(pos1, pos2):
-            return bool(pos2[0] - pos1[0]) != bool(pos2[1] - pos1[1]) and (not pos2[0] - pos1[0] or not pos2[1] - pos1[1])
+        def vecCondition(vec1, vec2):
+            return bool(vec2.row - vec1.row) != bool(vec2.col - vec2.row) and (not vec2.row - vec1.row or not vec2.col - vec2.col)
 
         rookList = []
-        for p in board.pieceDict[piece.color]:
-            if isinstance(p, Rook) and p.firstMove and posCondition(piece.position, p.position):
+        for p in board.pieces[piece.color]:
+            if isinstance(p, Rook) and p.firstMove and vecCondition(piece.vector, p.vector):
                 rookList.append(p)
         return rookList
 
     def getTargets(between):
         if not len(between) % 2:
-            target1 = between[int((len(between)/2)-1)]
-            target2 = between[int((len(between)/2))]
+            target1 = between[int((len(between) / 2) - 1)]
+            target2 = between[int((len(between) / 2))]
         else:
-            target1 = between[int((len(between)/2) - 0.5)]
-            target2 = between[int((len(between)/2) + 0.5)]
+            target1 = between[int((len(between) / 2) - 0.5)]
+            target2 = between[int((len(between) / 2) + 0.5)]
         return (target1, target2)
 
 
@@ -115,7 +115,7 @@ class CastleK(_Castling):
     def getDestinations(thisMove, piece, board):
         destList = []
         for rook in thisMove.findRooks(piece, board):
-            between = thisMove.findBetween(piece.position, rook.position)
+            between = thisMove.findBetween(piece.vector, rook.vector)
             if thisMove.emptyBetween(board, between) and not len(between) % 2:
                 kingTarget, _ = thisMoves.getTargets(between)
                 destList.append(kingTarget)
@@ -133,7 +133,7 @@ class CastleQ(_Castling):
     def getDestinations(thisMove, piece, board):
         destList = []
         for rook in thisMove.findRooks(piece, board):
-            between = thisMove.findBetween(piece.position, rook.position)
+            between = thisMove.findBetween(piece.vector, rook.vector)
             if thisMove.emptyBetween(board, between) and len(between) % 2:
                 kingTarget, _ = thisMove.getTargets(between)
                 destList.append(kingTarget)
@@ -154,27 +154,23 @@ class EnPassant(Move):
     @classmethod
     def getDestinations(thisMove, piece, board):
         destList = []
-        for diag in (piece.diagL, piece.diagR):
-            offset = thisMove.getPassed(piece.forward, diag)
-            pos = piece.getDest(*offset)
+        for diagVec in (piece.lDiagVec, piece.rDiagVec):
+            checkVec = (piece.vector - piece.forwardVec) + diagVec
             try:
-                if isinstance(board[pos], Pawn) and board[pos].passed:
-                    destList.append(piece.getDest(*diag))
+                if isinstance(board[checkVec], Pawn) and board[checkVec].passed:
+                    destList.append(piece.vector + diagVec)
             except IndexError:
                 pass
         return destList
 
     @classmethod
-    def action(thisMove, startPiece, targetPos, board):
-        board[thisMove.getPassed(startPiece.forward, targetPos)] = _Empty()
-        board.swapPositions(startPiece.position, targetPos)
-        notation = createNotation(board, startPiece, targetPos, 
+    def action(thisMove, piece, targetVec, board):
+        board[targetVec - piece.forwardVec] = Empty()
+        board.swapPositions(piece.vector, targetVec)
+        notation = createNotation(board, piece, targetVec,
             isPawn=True, capture=True)
-        startPiece.move(targetPos)
+        piece.move(targetVec)
         return notation
-
-    def getPassed(forw, diag):
-        return (diag[0] - forw[0], diag[1] - forw[1])
 
 
 if __name__ == "__main__":

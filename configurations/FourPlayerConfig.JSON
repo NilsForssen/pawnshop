@@ -82,13 +82,13 @@
         "yellow": ["Standard", "CastleK", "CastleQ", "EnPassant"],
         "green": ["Standard", "CastleK", "CastleQ", "EnPassant"]
     },
-    "promoteto": {
+    "promoteTo": {
         "red": ["Queen", "Rook", "Knight", "Bishop"],
         "blue": ["Queen", "Rook", "Knight", "Bishop"],
         "yellow": ["Queen", "Rook", "Knight", "Bishop"],
         "green": ["Queen", "Rook", "Knight", "Bishop"]
     },
-    "promotefrom": {
+    "promoteFrom": {
         "red": ["Pawn"],
         "blue": ["Pawn"],
         "yellow": ["Pawn"],
