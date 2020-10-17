@@ -1,6 +1,9 @@
 # Package init
 __init__.py
 
+#test.py
+test.py
+
 # Cache files for Sublime Text
 *.tmlanguage.cache
 *.tmPreferences.cache
