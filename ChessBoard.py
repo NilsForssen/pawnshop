@@ -10,7 +10,15 @@ from Pieces import *
 
 class Board():
     def __init__(self):
-        pass
+        self._board = []
+
+    def __iter__(self):
+        """
+        Returns iterator of board
+
+        Starting from top left, iterates through evey piece of the board
+        """
+        return iter([p for row in self._board for p in row])
 
     def __str__(self):
         string = "\n"
