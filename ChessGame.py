@@ -1,6 +1,7 @@
 from ChessBoard import initClassic
 import tkinter as tk
 
+
 root = tk.Tk()
 
 root.grid_rowconfigure((0, 1), weight=1)
@@ -9,7 +10,7 @@ root.grid_columnconfigure(1, weight=1)
 
 
 # Variables
-board = initClassic()
+BOARD = initClassic()
 outString = tk.StringVar()
 
 # Main Frames
@@ -30,36 +31,36 @@ outLabel = tk.Label(historyCanv, textvariable=outString)
 
 outLabel.grid()
 
+def drawBoard(canvW, canvH, **highlights):
+
+    rankH = int(canvW / BOARD.rows)
+    fileH = int(canvH / BOARD.cols)
+    squareH = (rankH, fileH)[rankH > fileH]
+    extraX = int((canvW - (BOARD.rows * squareH)) / 2)
+    extraY = int((canvH - (BOARD.cols * squareH)) / 2)
+
+    boardCanv.delete("all")
+
+    for row in range(BOARD.rows):
+
+        for col in range(int(BOARD.cols)):
+            try:
+                color = highlights[]
+            color = ("WHITE", "SADDLE BROWN")[(col + (row%2)) %2]
+
+            boardCanv.create_rectangle(
+                extraX + (col * squareH),
+                extraY + (row * squareH),
+                extraX + ((col + 1) * squareH),
+                extraY + ((row + 1) * squareH),
+                fill=color, outline="BLACK")
+
 
 def resize(event):
 
-    rankH = int(event.width / board.rows)
-    fileH = int(event.height / board.cols)
-    squareH = (rankH, fileH)[rankH > fileH]
-    extraX = int((event.width - (board.rows * squareH)) / 2)
-    extraY = int((event.height - (board.cols * squareH)) / 2)
+    drawBoard(event.width, event.height)
 
-    boardCanv.delete("all")
-    boardCanv.create_rectangle(
-        extraX,
-        extraY,
-        extraX + (squareH * board.cols),
-        extraY + (squareH * board.rows),
-        fill="SADDLE BROWN", outline="BLACK")
-
-    for row in range(board.rows):
-
-        for col in range(int(board.cols / 2)):
-            startX = extraX + (squareH * (row % 2))
-
-            boardCanv.create_rectangle(
-                startX + (2 * col) * squareH,
-                extraY + (row * squareH),
-                startX + ((2 * col) + 1) * squareH,
-                extraY + ((row + 1) * squareH),
-                fill="WHITE", outline="BLACK")
-
-    outString.set(" . ".join(map(str, [extraX, extraY, rankH, fileH, event.width, event.height])))
+    outString.set(" . ".join(map(str, [event.width, event.height])))
 
 
 boardCanv.bind("<Configure>", resize)
