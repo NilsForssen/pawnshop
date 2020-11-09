@@ -18,7 +18,8 @@ class Board():
 
         Starting from top left, iterates through evey piece of the board
         """
-        return iter([p for row in self._board for p in row])
+        for p in [p for row in self._board for p in row]:
+            yield p
 
     def __str__(self):
         string = "\n"
@@ -108,14 +109,14 @@ class Board():
             self.promoteFrom = config.get("promoteFrom") or dConfig.get("promoteFrom")
             self.promoteAt = config.get("promoteAt") or dConfig.get("promteAt")
 
-            self._board = [[Empty() for _ in range(self.cols)] for _ in range(self.rows)]
+            self._board = [[Empty(ChessVector((row, col))) for col in range(self.cols)] for row in range(self.rows)]
 
             for color, pieceList in self.pieces.items():
                 for piece in pieceList:
                     self[piece.vector] = piece
 
             for vec in config.get("disabled") or dConfig.get("disabled"):
-                self[vector] = Disabled()
+                self[vector] = Disabled(vector)
 
         self.checks = {key: False for key in self.pieces.keys()}
         self.checkmates = copy(self.checks)
@@ -249,7 +250,7 @@ class Board():
             for piece in [p for pList in self.pieces.values() for p in pList]:
 
                 if not piece is startPiece:
-                    piece.postAction(board)
+                    piece.postAction(self)
 
             self.history.append(notation)
 

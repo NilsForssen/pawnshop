@@ -142,6 +142,9 @@ class ChessVector(object):
     def __str__(self):
         return str((self.row, self.col))
 
+    def tuple(self):
+        return (self._row, self._col)
+
     def getStr(self, board):
         notation = ""
         notation += toAlpha(self.col)

@@ -128,7 +128,7 @@ class Pawn(Piece):
         super().move(newV)
 
     def postAction(self, board):
-        passed = False
+        self.passed = False
 
     def getAttacking(self, board):
         return (self.vector + self.lDiagVec, self.vector + self.rDiagVec)
@@ -208,11 +208,17 @@ class Queen(Piece):
 
 
 class Disabled():
+    def __init__(self, vector):
+        self.vector = vector
+
     def __str__(self):
         return "  "
 
 
 class Empty():
+    def __init__(self, vector):
+        self.vector = vector
+
     def __str__(self):
         return "__"
 

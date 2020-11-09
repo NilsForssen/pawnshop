@@ -38,7 +38,7 @@ class Standard(Move):
         if not isinstance(targetPiece, Empty):
             capture = True
             board.swapPositions(startPiece.vector, targetVec)
-            board[startPiece.vector] = Empty()
+            board[startPiece.vector] = Empty(startPiece.vector)
         else:
             board.swapPositions(startPiece.vector, targetVec)
 
@@ -117,7 +117,7 @@ class CastleK(_Castling):
         for rook in thisMove.findRooks(piece, board):
             between = thisMove.findBetween(piece.vector, rook.vector)
             if thisMove.emptyBetween(board, between) and not len(between) % 2:
-                kingTarget, _ = thisMoves.getTargets(between)
+                kingTarget, _ = thisMove.getTargets(between)
                 destList.append(kingTarget)
         return destList
 
@@ -165,11 +165,12 @@ class EnPassant(Move):
 
     @classmethod
     def action(thisMove, piece, targetVec, board):
-        board[targetVec - piece.forwardVec] = Empty()
+        board[targetVec - piece.forwardVec] = Empty(targetVec - piece.forwardVec)
         board.swapPositions(piece.vector, targetVec)
         notation = createNotation(board, piece, targetVec,
             isPawn=True, capture=True)
         piece.move(targetVec)
+        print("Passant")
         return notation
 
 
