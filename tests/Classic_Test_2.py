@@ -29,8 +29,6 @@ move("d1", "d3")
 move("c1", "d2")
 move("b1", "c3")
 
+move("e1", "g1")
+
 print(board)
-
-print(board[ChessVector("e1", board=board)].getStandardMoves)
-
-move("e1", "c1")

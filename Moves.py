@@ -37,16 +37,17 @@ class Standard(Move):
 
         if not isinstance(targetPiece, Empty):
             capture = True
+            board[targetVec] = Empty(targetVec)
             board.swapPositions(startPiece.vector, targetVec)
-            board[startPiece.vector] = Empty(startPiece.vector)
         else:
             board.swapPositions(startPiece.vector, targetVec)
-            board[startPiece.vector].vector = startPiece.vector
+
+        startPiece.move(targetVec)
 
         notation = createNotation(
             board, startPiece, targetVec,
             isPawn=isinstance(startPiece, Pawn), capture=capture)
-        startPiece.move(targetVec)
+
         return notation
 
 
@@ -68,7 +69,7 @@ class _Castling(Move):
                 rook.move(rookTarget)
                 break
         else:
-            raise ValueError(f"Piece cannot move to {targetVec }")
+            raise ValueError(f"Piece cannot move to {targetVec}")
 
     def findBetween(vec1, vec2):
         rowStep = vec1.row - vec2.row and (1, -1)[vec1.row - vec2.row < 0]
@@ -92,7 +93,7 @@ class _Castling(Move):
 
     def findRooks(piece, board):
         def vecCondition(vec1, vec2):
-            return bool(vec2.row - vec1.row) != bool(vec2.col - vec2.row) and (not vec2.row - vec1.row or not vec2.col - vec2.col)
+            return bool(vec2.row - vec1.row) != bool(vec2.col - vec1.col) and (not vec2.row - vec1.row or not vec2.col - vec2.col)
 
         rookList = []
         for p in board.pieces[piece.color]:
@@ -124,7 +125,7 @@ class CastleK(_Castling):
 
     @classmethod
     def action(thisMove, *args, **kwargs):
-        super().ation(*args, **kwargs)
+        super().action(*args, **kwargs)
         return "0-0"
 
 
@@ -171,7 +172,6 @@ class EnPassant(Move):
         notation = createNotation(board, piece, targetVec,
             isPawn=True, capture=True)
         piece.move(targetVec)
-        print("Passant")
         return notation
 
 

@@ -127,6 +127,8 @@ class Board():
         self.checkForCheck()
 
     def swapPositions(self, vec1, vec2):
+        self._board[vec1.row][vec1.col].vector = vec2
+        self._board[vec2.row][vec2.col].vector = vec1
         self._board[vec1.row][vec1.col], self._board[vec2.row][vec2.col] = self._board[vec2.row][vec2.col], self._board[vec1.row][vec1.col]
 
     def isEmpty(self, vector):
