@@ -167,7 +167,7 @@ class Board():
                         try:
                             for pieceType in [None, *self.promoteTo[color]]:
                                 try:
-                                    self.movePiece(alliedPos, move, raw=True, ignoreMate=True,
+                                    self.movePiece(alliedPos, move, ignoreMate=True,
                                                    testMove=True, checkForMate=False, promote=pieceType)
                                 except PromotionError:
                                     continue

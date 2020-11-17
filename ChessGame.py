@@ -34,7 +34,7 @@ def getImage(color, imgpath):
     return img
 
 
-BOARD = init4P()
+BOARD = initClassic()
 IMAGEDIR = getResourcePath(__file__, "Sprites\\")
 
 outString = tk.StringVar()
@@ -44,23 +44,22 @@ root.grid_columnconfigure(0, weight=4)
 root.grid_columnconfigure(1, weight=1)
 
 # Variables
-IMG = getImage(COLORS["red"], IMAGEDIR + "Pawn" + ".png")
 
 
 class ChessCanvas(tk.Canvas):
     def __init__(self, master, board, **kwargs):
         super().__init__(master, **kwargs)
 
-        self.drawthis = False
-
         self.board = board
         self.turnorder = self.board.turnorder
         self.currentTurn = self.turnorder[0]
-
         self.selected = None
-        self.squares = {}
+
         self.square = 64
         self.blackbarTop, self.blackbarBottom, self.blackbarLeft, self.blackbarRight = 0, 0, 0, 0
+
+        self.squares = {}
+        self.images = {}
 
         for i, piece in enumerate(self.board):
             color = ("saddle brown", "white")[(i + int((i) / self.board.cols)) % 2 == 0]
@@ -74,16 +73,21 @@ class ChessCanvas(tk.Canvas):
                     fill=color,
                     outline="black"))
 
-        self.setImages()
+                if not isinstance(piece, Empty):
+                    self.getImage(piece)
 
-    def setImages(self):
-        for piece in self.board:
-            if not isinstance(piece, Disabled):
-                if not hasattr(piece, "image"):
-                    if isinstance(piece, Empty):
-                        piece.image, piece.imageid = None, None
-                    else:
-                        piece.image = getImage(COLORS[piece.color], IMAGEDIR + piece.__class__.__name__ + ".png")
+    def getImage(self, piece):
+        pColor = piece.color
+        pClass = piece.__class__.__name__
+        try:
+            return self.images[pColor + pClass]
+        except KeyError:
+            return self.createImage(pColor, pClass)
+
+    def createImage(self, pColor, pClass):
+        img = getImage(COLORS[pColor], IMAGEDIR + pClass + ".png")
+        self.images[pColor + pClass] = img
+        return img
 
     def interact(self, event, *args):
         if event.x + self.blackbarRight < self.winfo_width() and event.x - self.blackbarLeft > 0 and event.y + self.blackbarBottom < self.winfo_height() and event.y - self.blackbarTop > 0:
@@ -98,7 +102,7 @@ class ChessCanvas(tk.Canvas):
 
     def moveSelected(self, vector):
         try:
-            self.board.movePiece(self.selected.vector, vector)
+            print(self.board.movePiece(self.selected.vector, vector))
         except PromotionError:
             msg = "What do you want the pawn to promote to?"
             while True:
@@ -107,14 +111,13 @@ class ChessCanvas(tk.Canvas):
                     break
                 try:
                     pType = {pType.__name__: pType for pType in self.board.promoteTo[self.selected.color]}[prompt.lower().capitalize()]
-                    self.board.movePiece(self.selected.vector, vector, promote=pType)
+                    print(self.board.movePiece(self.selected.vector, vector, promote=pType))
                     break
                 except KeyError:
                     msg = prompt + "is Not a valid piece, must be any of \n" + "\n".join([pType.__name__ for pType in self.board.promoteTo[self.selected.color]])
                     continue
         self.clearHighlights()
         self.advanceTurn()
-        self.setImages()
         self.update()
 
     def select(self, vec):
@@ -172,8 +175,8 @@ class ChessCanvas(tk.Canvas):
             if not isinstance(piece, Disabled):
                 pos = piece.vector
 
-                if not piece.image is None:
-                    img = piece.image.copy().resize((self.square, self.square))
+                if not isinstance(piece, Empty):
+                    img = self.getImage(piece).copy().resize((self.square, self.square))
                     photoImg = ImageTk.PhotoImage(img)
 
                     # To keep an image on the canvas, a reference to the ImageTk.PhotoImage

@@ -33,4 +33,4 @@ print(board)
 
 print(board[ChessVector("e1", board=board)].getStandardMoves)
 
-move("e1", "g1")
+move("e1", "c1")
