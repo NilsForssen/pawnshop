@@ -78,24 +78,63 @@ _fourPlayerPieces = {
     Pawn(_blue, "right"): ChessVector((9, 1)),
     Pawn(_blue, "right"): ChessVector((10, 1))
 }
-
+_disabled = [
+    ChessVector((0, 0)),
+    ChessVector((0, 1)),
+    ChessVector((0, 2)),
+    ChessVector((1, 0)),
+    ChessVector((1, 1)),
+    ChessVector((1, 2)),
+    ChessVector((2, 0)),
+    ChessVector((2, 1)),
+    ChessVector((2, 2)),
+    ChessVector((0, 11)),
+    ChessVector((0, 12)),
+    ChessVector((0, 13)),
+    ChessVector((1, 11)),
+    ChessVector((1, 12)),
+    ChessVector((1, 13)),
+    ChessVector((2, 11)),
+    ChessVector((2, 12)),
+    ChessVector((2, 13)),
+    ChessVector((11, 0)),
+    ChessVector((11, 1)),
+    ChessVector((11, 2)),
+    ChessVector((12, 0)),
+    ChessVector((12, 1)),
+    ChessVector((12, 2)),
+    ChessVector((13, 0)),
+    ChessVector((13, 1)),
+    ChessVector((13, 2)),
+    ChessVector((11, 11)),
+    ChessVector((11, 12)),
+    ChessVector((11, 13)),
+    ChessVector((12, 11)),
+    ChessVector((12, 12)),
+    ChessVector((12, 13)),
+    ChessVector((13, 11)),
+    ChessVector((13, 12)),
+    ChessVector((13, 13))
+]
 for piece, vector in _fourPlayerPieces.items():
     piece.vector = vector
 
 _pieceDict = {color: [piece for piece in _fourPlayerPieces.keys() if piece.color == color] for color in _colors}
-_moveDict = {color: [Standard, CastleK, CastleQ, EnPassant] for color in _colors}
+_moveDict = {color: [Standard, CastleK, CastleQ] for color in _colors}
 _promoteToDict = {color: [Queen, Rook, Knight, Bishop] for color in _colors}
 _promoteFromDict = {color: [Pawn] for color in _colors}
 _promoteAtDict = {color: 8 for color in _colors}
 
 CONFIG = {
-    "rows": 8,
-    "cols": 8,
+    "rows": 14,
+    "cols": 14,
     "pieces": _pieceDict,
     "moves": _moveDict,
     "promoteTo": _promoteToDict,
-    "promteFrom": _promoteFromDict,
-    "promoteAt": _promoteAtDict
+    "promoteFrom": _promoteFromDict,
+    "promoteAt": _promoteAtDict,
+    "disabled": _disabled,
+    "turnorder": ["red", "blue", "yellow", "green"]
 }
 
 if __name__ == "__main__":

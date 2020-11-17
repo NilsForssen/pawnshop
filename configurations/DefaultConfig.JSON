@@ -7,5 +7,6 @@
     "moves": {},
     "promoteTo": {},
     "promoteFrom": {},
-    "promoteAt": {}
+    "promoteAt": {},
+    "turnorder": []
 }

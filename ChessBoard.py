@@ -108,6 +108,7 @@ class Board():
             self.promoteTo = config.get("promoteTo") or dConfig.get("promoteTo")
             self.promoteFrom = config.get("promoteFrom") or dConfig.get("promoteFrom")
             self.promoteAt = config.get("promoteAt") or dConfig.get("promteAt")
+            self.turnorder = config.get("turnorder") or dConfig.get("turnorder")
 
             self._board = [[Empty(ChessVector((row, col))) for col in range(self.cols)] for row in range(self.rows)]
 
@@ -116,7 +117,7 @@ class Board():
                     self[piece.vector] = piece
 
             for vec in config.get("disabled") or dConfig.get("disabled"):
-                self[vector] = Disabled(vector)
+                self[vec] = Disabled(vec)
 
         self.checks = {key: False for key in self.pieces.keys()}
         self.checkmates = copy(self.checks)
@@ -206,7 +207,7 @@ class Board():
 
             for move in board.moves[startPiece.color]:
                 if move.pieceCondition(startPiece):
-                    if targetVec in move.getDestinations(startPiece, board):
+                    if raw or targetVec in move.getDestinations(startPiece, board):
                         notation = move.action(startPiece, targetVec, board)
                         for pieceType in self.promoteFrom[startPiece.color]:
                             if isinstance(startPiece, pieceType):

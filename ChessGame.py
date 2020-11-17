@@ -1,7 +1,8 @@
-from ChessBoard import initClassic
+from ChessBoard import initClassic, init4P
 from Pieces import Piece, Queen
 from Pieces import Empty, Disabled
 import tkinter as tk
+from tkinter import messagebox, simpledialog
 from PIL import Image, ImageTk
 from Utils import getResourcePath
 from ChessVector import ChessVector
@@ -33,7 +34,7 @@ def getImage(color, imgpath):
     return img
 
 
-BOARD = initClassic()
+BOARD = init4P()
 IMAGEDIR = getResourcePath(__file__, "Sprites\\")
 
 outString = tk.StringVar()
@@ -50,13 +51,15 @@ class ChessCanvas(tk.Canvas):
     def __init__(self, master, board, **kwargs):
         super().__init__(master, **kwargs)
 
+        self.drawthis = False
+
         self.board = board
+        self.turnorder = self.board.turnorder
+        self.currentTurn = self.turnorder[0]
 
         self.selected = None
-        self.photos = []
         self.squares = {}
-
-        self.square = 0
+        self.square = 64
         self.blackbarTop, self.blackbarBottom, self.blackbarLeft, self.blackbarRight = 0, 0, 0, 0
 
         for i, piece in enumerate(self.board):
@@ -74,8 +77,7 @@ class ChessCanvas(tk.Canvas):
         self.setImages()
 
     def setImages(self):
-        for i, piece in enumerate(self.board):
-            color = ("saddle brown", "white")[(i + int((i) / self.board.cols)) % 2 == 0]
+        for piece in self.board:
             if not isinstance(piece, Disabled):
                 if not hasattr(piece, "image"):
                     if isinstance(piece, Empty):
@@ -90,37 +92,55 @@ class ChessCanvas(tk.Canvas):
                 self.select(vec)
             else:
                 if vec in self.selected.getMoves(self.board):
-                    try:
-                        self.board.movePiece(self.selected.vector, vec)
-                    except PromotionError:
-                        self.board.movePiece(self.selected.vector, vec, promote=Queen)
-
-                    self.clearHighlights()
-                    self.setImages()
-                    self.draw()
+                    self.moveSelected(vec)
                 else:
                     self.select(vec)
+
+    def moveSelected(self, vector):
+        try:
+            self.board.movePiece(self.selected.vector, vector)
+        except PromotionError:
+            msg = "What do you want the pawn to promote to?"
+            while True:
+                prompt = simpledialog.askstring("Promote!", msg)
+                if prompt is None:
+                    break
+                try:
+                    pType = {pType.__name__: pType for pType in self.board.promoteTo[self.selected.color]}[prompt.lower().capitalize()]
+                    self.board.movePiece(self.selected.vector, vector, promote=pType)
+                    break
+                except KeyError:
+                    msg = prompt + "is Not a valid piece, must be any of \n" + "\n".join([pType.__name__ for pType in self.board.promoteTo[self.selected.color]])
+                    continue
+        self.clearHighlights()
+        self.advanceTurn()
+        self.setImages()
+        self.update()
 
     def select(self, vec):
         self.clearHighlights()
         piece = self.board[vec]
-        if isinstance(piece, Piece):
+        if isinstance(piece, Piece) and piece.color == self.currentTurn:
             self.selected = piece
             self.itemconfigure(self.squares[piece.vector.tuple()], fill="light goldenrod")
             self.highlight(piece.getMoves(self.board))
         else:
             self.selected = None
 
+    def advanceTurn(self):
+        idx = self.turnorder.index(self.currentTurn)
+        try:
+            self.currentTurn = self.turnorder[idx + 1]
+        except IndexError:
+            self.currentTurn = self.turnorder[0]
+
     def clearHighlights(self):
-        for i, square in enumerate(self.squares.values()):
+        for i, piece in enumerate(self.board):
             color = ("saddle brown", "white")[(i + int((i) / self.board.cols)) % 2 == 0]
-            if self.itemcget(square, "fill") != color:
-                self.itemconfig(square, fill=color)
-
-        self.highilhts = []
-        self.selected = None
-
-        self.highlights = []
+            if not isinstance(piece, Disabled):
+                square = self.squares[piece.vector.tuple()]
+                if self.itemcget(square, "fill") != color:
+                    self.itemconfig(square, fill=color)
         self.selected = None
 
     def highlight(self, vecs):
@@ -136,9 +156,9 @@ class ChessCanvas(tk.Canvas):
         self.blackbarTop = int((self.winfo_height() - (self.board.cols * self.square)) / 2)
         self.blackbarBottom = self.winfo_height() - self.blackbarTop - (self.board.rows * self.square)
 
-        self.draw()
+        self.update()
 
-    def draw(self):
+    def update(self):
         self.photos = []
 
         for (row, col), square in self.squares.items():
@@ -182,9 +202,7 @@ outLabel.grid()
 
 
 def resize(event):
-    # drawBoard(event.width, event.height, {"e3": "RED"})
-    boardCanv.draw({"e3": "red"})
-    outString.set(" . ".join(map(str, [boardCanv.winfo_width(), boardCanv.winfo_height(), evalCanv.winfo_width(), evalCanv.winfo_height(), root.winfo_width(), root.winfo_height()])))
+    boardCanv.update()
 
 
 boardCanv.bind("<Button-1>", boardCanv.interact)

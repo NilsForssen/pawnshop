@@ -60,7 +60,8 @@ CONFIG = {
     "moves": _moveDict,
     "promoteTo": _promoteToDict,
     "promoteFrom": _promoteFromDict,
-    "promoteAt": _promoteAtDict
+    "promoteAt": _promoteAtDict,
+    "turnorder": ["white", "black"]
 }
 
 if __name__ == "__main__":

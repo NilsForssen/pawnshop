@@ -41,6 +41,7 @@ class Standard(Move):
             board[startPiece.vector] = Empty(startPiece.vector)
         else:
             board.swapPositions(startPiece.vector, targetVec)
+            board[startPiece.vector].vector = startPiece.vector
 
         notation = createNotation(
             board, startPiece, targetVec,
@@ -157,7 +158,7 @@ class EnPassant(Move):
         for diagVec in (piece.lDiagVec, piece.rDiagVec):
             checkVec = (piece.vector - piece.forwardVec) + diagVec
             try:
-                if isinstance(board[checkVec], Pawn) and board[checkVec].passed:
+                if isinstance(board[checkVec], Pawn) and board[checkVec].passed and board[checkVec].forwardVec == -piece.forwardVec:
                     destList.append(piece.vector + diagVec)
             except IndexError:
                 pass
