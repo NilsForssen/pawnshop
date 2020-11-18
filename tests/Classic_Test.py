@@ -164,3 +164,6 @@ move("e8", "f8")
 print(board)
 
 # print(board.history)
+
+for p in board:
+    print(p, p.vector)

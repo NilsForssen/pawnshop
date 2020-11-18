@@ -32,21 +32,18 @@ class Standard(Move):
 
     @classmethod
     def action(thisMove, startPiece, targetVec, board):
-        capture = False
+
         targetPiece = board[targetVec]
 
+        notation = createNotation(
+            board, startPiece, targetVec,
+            isPawn=isinstance(startPiece, Pawn), capture=not isinstance(targetPiece, Empty))
+
         if not isinstance(targetPiece, Empty):
-            capture = True
             board[targetVec] = Empty(targetVec)
             board.swapPositions(startPiece.vector, targetVec)
         else:
             board.swapPositions(startPiece.vector, targetVec)
-
-        startPiece.move(targetVec)
-
-        notation = createNotation(
-            board, startPiece, targetVec,
-            isPawn=isinstance(startPiece, Pawn), capture=capture)
 
         return notation
 
@@ -65,8 +62,6 @@ class _Castling(Move):
                 kingTarget, rookTarget = thisMove.getTargets(between)
                 board.swapPositions(startPiece.vector, kingTarget)
                 board.swapPositions(rook.vector, rookTarget)
-                startPiece.move(kingTarget)
-                rook.move(rookTarget)
                 break
         else:
             raise ValueError(f"Piece cannot move to {targetVec}")
@@ -120,7 +115,13 @@ class CastleK(_Castling):
             between = thisMove.findBetween(piece.vector, rook.vector)
             if thisMove.emptyBetween(board, between) and not len(between) % 2:
                 kingTarget, _ = thisMove.getTargets(between)
-                destList.append(kingTarget)
+                walked = thisMove.findBetween(piece.vector, kingTarget)
+                print(board.isThreatened(ChessVector((7, 5)), "white"))
+                for vec in walked:
+                    if board.isThreatened(vec, piece.color):
+                        break
+                else:
+                    destList.append(kingTarget)
         return destList
 
     @classmethod
@@ -138,7 +139,12 @@ class CastleQ(_Castling):
             between = thisMove.findBetween(piece.vector, rook.vector)
             if thisMove.emptyBetween(board, between) and len(between) % 2:
                 kingTarget, _ = thisMove.getTargets(between)
-                destList.append(kingTarget)
+                walked = thisMove.findBetween(piece.vector, kingTarget)
+                for vec in walked:
+                    if board.isThreatened(vec, piece.color):
+                        break
+                else:
+                    destList.append(kingTarget)
         return destList
 
     @classmethod
@@ -167,11 +173,12 @@ class EnPassant(Move):
 
     @classmethod
     def action(thisMove, piece, targetVec, board):
-        board[targetVec - piece.forwardVec] = Empty(targetVec - piece.forwardVec)
-        board.swapPositions(piece.vector, targetVec)
+
         notation = createNotation(board, piece, targetVec,
             isPawn=True, capture=True)
-        piece.move(targetVec)
+
+        board[targetVec - piece.forwardVec] = Empty(targetVec - piece.forwardVec)
+        board.swapPositions(piece.vector, targetVec)
         return notation
 
 

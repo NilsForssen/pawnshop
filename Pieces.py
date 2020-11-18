@@ -214,6 +214,9 @@ class Disabled():
     def __str__(self):
         return "  "
 
+    def move(self, vec):
+        self.vector = vec
+
 
 class Empty():
     def __init__(self, vector):
@@ -221,6 +224,9 @@ class Empty():
 
     def __str__(self):
         return "__"
+
+    def move(self, vec):
+        self.vector = vec
 
 
 if __name__ == "__main__":
