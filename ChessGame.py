@@ -29,15 +29,15 @@ class ChessFrame(tk.Frame):
         self.grid_columnconfigure(1, weight=1)
 
         self.canvas = tk.Canvas(self, width=400, height=400, bg="black", highlightthickness=0)
-        self.historyCanv = tk.Frame(self, width=200, height=200, bg="green", highlightthickness=0)
-        self.evalCanv = tk.Frame(self, width=200, height=200, bg="blue", highlightthickness=0)
+        self.historyFrame = tk.Frame(self, width=200, height=200, bg="green", highlightthickness=0)
+        self.evalFrame = tk.Frame(self, width=200, height=200, bg="blue", highlightthickness=0)
 
         self.canvas.grid(row=0, rowspan=2, column=0, sticky="NSEW")
-        self.historyCanv.grid(row=0, column=1, sticky="NSEW")
-        self.evalCanv.grid(row=1, column=1, sticky="NSEW")
+        self.historyFrame.grid(row=0, column=1, sticky="NSEW")
+        self.evalFrame.grid(row=1, column=1, sticky="NSEW")
 
-        self.historyCanv.grid_propagate(0)
-        self.evalCanv.grid_propagate(0)
+        self.historyFrame.grid_propagate(0)
+        self.evalFrame.grid_propagate(0)
 
         # Chesscanvas related
         self.board = board
@@ -70,6 +70,13 @@ class ChessFrame(tk.Frame):
         # Variables
         self.historyString = tk.StringVar(self)
         self.evalString = tk.StringVar(self)
+
+        # Labels
+        self.historyLabel = tk.Label(self.historyFrame, textvariable=self.historyString)
+        self.evalLabel = tk.Label(self.evalFrame, textvariable=self.evalString)
+
+        self.historyLabel.grid(row=0, column=0, sticky="NSEW")
+        self.evalLabel.grid(row=0, column=0, sticky="NSEW")
 
         # Chesscanvas actions
         self.canvas.bind("<Configure>", self.resize)
@@ -162,6 +169,7 @@ class ChessFrame(tk.Frame):
 
     def update(self, *args):
         """Update all widgets of frame"""
+        self.historyString.set("".join(self.board.history))
         self.photos = []
 
         for (row, col), square in self.squares.items():

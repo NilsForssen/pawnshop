@@ -2,8 +2,13 @@
 
 import sys
 import os
-from string import ascii_lowercase
+import re
 from PIL import Image
+from string import ascii_lowercase
+
+
+def formatHistory(history, players=2):
+    pass
 
 
 def getResourcePath(filePath, relativePath):
