@@ -3,17 +3,34 @@
 import sys
 import os
 from string import ascii_lowercase
+from PIL import Image
 
 
 def getResourcePath(filePath, relativePath):
-    """
-    Get pyinstaller resource
+    """Get resource
+
+    More reliable when script is compiled with pyinstaller.
     """
     resourcePath = os.path.join(os.path.dirname(os.path.abspath(filePath)), relativePath)
     if hasattr(sys, '_MEIPASS'):
         return os.path.join(sys._MEIPASS, resourcePath)
 
     return os.path.join(os.path.abspath("."), resourcePath)
+
+
+def fetchImage(color, imgpath):
+    """Fetch image from disk"""
+    img = Image.open(imgpath)
+    pixels = img.load()
+    fullGreen = 255
+    r, g, b = color
+    for x in range(img.height):
+        for y in range(img.width):
+            _, greenVal, _, alpha = pixels[x, y]
+            if greenVal:
+                ratio = greenVal / fullGreen
+                pixels[x, y] = (round(r * ratio), round(g * ratio), round(b * ratio), alpha)
+    return img
 
 
 def _catchOutofBounce(func):

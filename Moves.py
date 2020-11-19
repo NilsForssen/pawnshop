@@ -116,7 +116,6 @@ class CastleK(_Castling):
             if thisMove.emptyBetween(board, between) and not len(between) % 2:
                 kingTarget, _ = thisMove.getTargets(between)
                 walked = thisMove.findBetween(piece.vector, kingTarget)
-                print(board.isThreatened(ChessVector((7, 5)), "white"))
                 for vec in walked:
                     if board.isThreatened(vec, piece.color):
                         break
