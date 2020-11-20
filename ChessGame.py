@@ -2,12 +2,15 @@
 
 import tkinter as tk
 from tkinter import simpledialog, messagebox
+from tkinter.font import Font
 from PIL import ImageTk
 from ChessBoard import initClassic
 from Pieces import Piece, Empty, Disabled
 from Utils import getResourcePath, fetchImage
 from ChessVector import ChessVector
 from Exceptions import PromotionError, Illegal
+from formatPGN import *
+
 
 IMAGEDIR = getResourcePath(__file__, "Sprites\\")
 COLORS = {
@@ -20,6 +23,28 @@ COLORS = {
 }
 
 
+class ScrollableLabel(tk.Frame):
+    def __init__(self, master, *args, **kwargs):
+        super().__init__(master)
+
+        self.grid_rowconfigure(0, weight=1)
+        self.grid_columnconfigure(0, weight=1)
+
+        self.canvas = tk.Canvas(self, *args, **kwargs)
+        self.label = tk.Label(self)
+        self.scroll = tk.Scrollbar(self, orient="vertical", command=self.canvas.yview)
+
+        self.canvas.create_window(0, 0, anchor="nw", window=self.label)
+        self.canvas.configure(yscrollcommand=self.scroll.set)
+
+        self.canvas.grid(row=0, column=0, sticky="NSEW")
+        self.scroll.grid(row=0, column=1, sticky="NSEW")
+
+        self.label.bind("<Configure>",
+            lambda e: self.canvas.configure(
+                scrollregion=self.canvas.bbox("all")))
+
+
 class ChessFrame(tk.Frame):
     def __init__(self, master, board, **kwargs):
         super().__init__(master, **kwargs, bg="red")
@@ -29,11 +54,16 @@ class ChessFrame(tk.Frame):
         self.grid_columnconfigure(0, weight=4)
         self.grid_columnconfigure(1, weight=1)
 
-        self.canvas = tk.Canvas(self, width=400, height=400, bg="black", highlightthickness=0)
-        self.historyFrame = tk.Frame(self, width=200, height=200, bg="green", highlightthickness=0)
-        self.evalFrame = tk.Frame(self, width=200, height=200, bg="blue", highlightthickness=0)
+        self.boardCanv = tk.Canvas(self, width=400, height=400, bg="black", highlightthickness=0)
+        self.historyFrame = tk.Frame(self, width=200, height=200, bg="green", highlightbackground="black", highlightthickness=1)
+        self.evalFrame = tk.Frame(self, width=200, height=200, bg="blue", highlightbackground="black", highlightthickness=1)
 
-        self.canvas.grid(row=0, rowspan=2, column=0, sticky="NSEW")
+        self.historyFrame.grid_rowconfigure(1, weight=1)
+        self.historyFrame.grid_columnconfigure(0, weight=1)
+        self.evalFrame.grid_rowconfigure(1, weight=1)
+        self.evalFrame.grid_columnconfigure(0, weight=1)
+
+        self.boardCanv.grid(row=0, rowspan=2, column=0, sticky="NSEW")
         self.historyFrame.grid(row=0, column=1, sticky="NSEW")
         self.evalFrame.grid(row=1, column=1, sticky="NSEW")
 
@@ -57,7 +87,7 @@ class ChessFrame(tk.Frame):
             color = ("saddle brown", "white")[(i + int((i) / self.board.cols)) % 2 == 0]
             if not isinstance(piece, Disabled):
                 pos = piece.vector
-                self.squares[pos.tuple()] = (self.canvas.create_rectangle(
+                self.squares[pos.tuple()] = (self.boardCanv.create_rectangle(
                     self.blackbarLeft + (pos.col * self.square),
                     self.blackbarTop + (pos.row * self.square),
                     self.blackbarLeft + ((pos.col + 1) * self.square),
@@ -72,16 +102,24 @@ class ChessFrame(tk.Frame):
         self.historyString = tk.StringVar(self)
         self.evalString = tk.StringVar(self)
 
-        # Labels
-        self.historyLabel = tk.Label(self.historyFrame, textvariable=self.historyString)
-        self.evalLabel = tk.Label(self.evalFrame, textvariable=self.evalString)
+        # Fonts
+        self.headingFont = Font(family="Curier", size=20, weight="bold")
+        self.labelFont = Font(family="Curier", size=20, weight="bold")
 
-        self.historyLabel.grid(row=0, column=0, sticky="NSEW")
-        self.evalLabel.grid(row=0, column=0, sticky="NSEW")
+        # Labels
+        self.historyHeading = tk.Label(self.historyFrame, text="HISTORY", font=self.headingFont)
+        self.evalHeading = tk.Label(self.evalFrame, text="EVALUATION", font=self.headingFont)
+        self.historyLabel = ScrollableLabel(self.historyFrame)
+        self.evalLabel = ScrollableLabel(self.evalFrame)
+
+        self.historyHeading.grid(row=0, column=0, sticky="NSEW")
+        self.evalHeading.grid(row=0, column=0, sticky="NSEW")
+        self.historyLabel.grid(row=1, column=0, sticky="NSEW")
+        self.evalLabel.grid(row=1, column=0, sticky="NSEW")
 
         # Chesscanvas actions
-        self.canvas.bind("<Configure>", self.resize)
-        self.canvas.bind("<Button-1>", self.chessInteract)
+        self.boardCanv.bind("<Configure>", self.resize)
+        self.boardCanv.bind("<Button-1>", self.chessInteract)
 
     def getImage(self, piece):
         """Get image of given piece"""
@@ -137,7 +175,7 @@ class ChessFrame(tk.Frame):
         piece = self.board[vec]
         if isinstance(piece, Piece) and piece.color == self.currentTurn:
             self.selected = piece
-            self.canvas.itemconfigure(self.squares[piece.vector.tuple()], fill="light goldenrod")
+            self.boardCanv.itemconfigure(self.squares[piece.vector.tuple()], fill="light goldenrod")
             self.highlight(piece.getMoves(self.board))
         else:
             self.selected = None
@@ -154,32 +192,33 @@ class ChessFrame(tk.Frame):
             color = ("saddle brown", "white")[(i + int((i) / self.board.cols)) % 2 == 0]
             if not isinstance(piece, Disabled):
                 square = self.squares[piece.vector.tuple()]
-                if self.canvas.itemcget(square, "fill") != color:
-                    self.canvas.itemconfig(square, fill=color)
+                if self.boardCanv.itemcget(square, "fill") != color:
+                    self.boardCanv.itemconfig(square, fill=color)
         self.selected = None
 
     def highlight(self, vecs):
         for vec in vecs:
-            self.canvas.itemconfigure(self.squares[vec.tuple()], fill="sky blue")
+            self.boardCanv.itemconfigure(self.squares[vec.tuple()], fill="sky blue")
 
     def resize(self, *args):
-        rankH = int(self.canvas.winfo_width() / self.board.rows)
-        fileH = int(self.canvas.winfo_height() / self.board.cols)
+        rankH = int(self.boardCanv.winfo_width() / self.board.rows)
+        fileH = int(self.boardCanv.winfo_height() / self.board.cols)
         self.square = (rankH, fileH)[rankH > fileH]
-        self.blackbarLeft = int((self.canvas.winfo_width() - (self.board.rows * self.square)) / 2)
-        self.blackbarRight = self.canvas.winfo_width() - self.blackbarLeft - (self.board.rows * self.square)
-        self.blackbarTop = int((self.canvas.winfo_height() - (self.board.cols * self.square)) / 2)
-        self.blackbarBottom = self.canvas.winfo_height() - self.blackbarTop - (self.board.rows * self.square)
+        self.blackbarLeft = int((self.boardCanv.winfo_width() - (self.board.rows * self.square)) / 2)
+        self.blackbarRight = self.boardCanv.winfo_width() - self.blackbarLeft - (self.board.rows * self.square)
+        self.blackbarTop = int((self.boardCanv.winfo_height() - (self.board.cols * self.square)) / 2)
+        self.blackbarBottom = self.boardCanv.winfo_height() - self.blackbarTop - (self.board.rows * self.square)
 
         self.update()
 
     def update(self, *args):
         """Update all widgets of frame"""
-        self.historyString.set("".join(self.board.history))
+        self.historyString.set(readable(self.board.history, 2))
+        print(readable(self.board.history, 2))
         self.photos = []
 
         for (row, col), square in self.squares.items():
-            self.canvas.coords(square,
+            self.boardCanv.coords(square,
                 self.blackbarLeft + (col * self.square),
                 self.blackbarTop + (row * self.square),
                 self.blackbarLeft + ((col + 1) * self.square),
@@ -198,7 +237,7 @@ class ChessFrame(tk.Frame):
                     # I will store the reference in the photos list.
                     self.photos.append(photoImg)
 
-                    self.canvas.create_image(
+                    self.boardCanv.create_image(
                         self.blackbarLeft + (pos.col * self.square) + int(self.square / 2),
                         self.blackbarTop + (pos.row * self.square) + int(self.square / 2),
                         image=photoImg)
