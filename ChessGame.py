@@ -1,16 +1,17 @@
 # ChessGame.py
 
 import tkinter as tk
+from tkinter import simpledialog, messagebox
 from PIL import ImageTk
 from ChessBoard import initClassic
 from Pieces import Piece, Empty, Disabled
 from Utils import getResourcePath, fetchImage
 from ChessVector import ChessVector
-from Exceptions import PromotionError
+from Exceptions import PromotionError, Illegal
 
 IMAGEDIR = getResourcePath(__file__, "Sprites\\")
 COLORS = {
-    "black": (50, 50, 50),
+    "black": (75, 75, 75),
     "white": (255, 255, 255),
     "red": (255, 0, 0),
     "green": (0, 255, 0),
@@ -108,23 +109,28 @@ class ChessFrame(tk.Frame):
 
     def moveSelected(self, vector):
         try:
-            print(self.board.movePiece(self.selected.vector, vector))
-        except PromotionError:
-            msg = "What do you want the pawn to promote to?"
-            while True:
-                prompt = simpledialog.askstring("Promote!", msg)
-                if prompt is None:
-                    break
-                try:
-                    pType = {pType.__name__: pType for pType in self.board.promoteTo[self.selected.color]}[prompt.lower().capitalize()]
-                    print(self.board.movePiece(self.selected.vector, vector, promote=pType))
-                    break
-                except KeyError:
-                    msg = prompt + "is Not a valid piece, must be any of \n" + "\n".join([pType.__name__ for pType in self.board.promoteTo[self.selected.color]])
-                    continue
-        self.clearHighlights()
-        self.advanceTurn()
-        self.update()
+            try:
+                print(self.board.movePiece(self.selected.vector, vector))
+            except PromotionError:
+                msg = "What do you want the pawn to promote to?"
+                while True:
+                    prompt = simpledialog.askstring("Promote!", msg)
+                    if prompt is None:
+                        break
+                    try:
+                        pType = {pType.__name__: pType for pType in self.board.promoteTo[self.selected.color]}[prompt.lower().capitalize()]
+                        print(self.board.movePiece(self.selected.vector, vector, promote=pType))
+                        break
+                    except KeyError:
+                        msg = prompt + "is Not a valid piece, must be any of \n" + "\n".join([pType.__name__ for pType in self.board.promoteTo[self.selected.color]])
+                        continue
+
+            self.clearHighlights()
+            self.advanceTurn()
+            self.update()
+
+        except Illegal as e:
+            messagebox.showerror(title="Illegal", message=e)
 
     def select(self, vec):
         self.clearHighlights()

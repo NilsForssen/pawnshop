@@ -3,7 +3,7 @@ class Illegal(Exception):
     pass
 
 
-class IllegalMove(Exception):
+class IllegalMove(Illegal):
     def __init__(self, startPos, targetPos,
                  msg="Piece at {0} cannot move to {1}!"):
         super().__init__(msg.format(startPos, targetPos))

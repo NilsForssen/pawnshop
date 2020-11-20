@@ -111,16 +111,17 @@ class CastleK(_Castling):
     @classmethod
     def getDestinations(thisMove, piece, board):
         destList = []
-        for rook in thisMove.findRooks(piece, board):
-            between = thisMove.findBetween(piece.vector, rook.vector)
-            if thisMove.emptyBetween(board, between) and not len(between) % 2:
-                kingTarget, _ = thisMove.getTargets(between)
-                walked = thisMove.findBetween(piece.vector, kingTarget)
-                for vec in walked:
-                    if board.isThreatened(vec, piece.color):
-                        break
-                else:
-                    destList.append(kingTarget)
+        if not board.checks[piece.color]:
+            for rook in thisMove.findRooks(piece, board):
+                between = thisMove.findBetween(piece.vector, rook.vector)
+                if thisMove.emptyBetween(board, between) and not len(between) % 2:
+                    kingTarget, _ = thisMove.getTargets(between)
+                    walked = thisMove.findBetween(piece.vector, kingTarget)
+                    for vec in walked:
+                        if board.isThreatened(vec, piece.color):
+                            break
+                    else:
+                        destList.append(kingTarget)
         return destList
 
     @classmethod
@@ -134,16 +135,17 @@ class CastleQ(_Castling):
     @classmethod
     def getDestinations(thisMove, piece, board):
         destList = []
-        for rook in thisMove.findRooks(piece, board):
-            between = thisMove.findBetween(piece.vector, rook.vector)
-            if thisMove.emptyBetween(board, between) and len(between) % 2:
-                kingTarget, _ = thisMove.getTargets(between)
-                walked = thisMove.findBetween(piece.vector, kingTarget)
-                for vec in walked:
-                    if board.isThreatened(vec, piece.color):
-                        break
-                else:
-                    destList.append(kingTarget)
+        if not board.checks[piece.color]:
+            for rook in thisMove.findRooks(piece, board):
+                between = thisMove.findBetween(piece.vector, rook.vector)
+                if thisMove.emptyBetween(board, between) and len(between) % 2:
+                    kingTarget, _ = thisMove.getTargets(between)
+                    walked = thisMove.findBetween(piece.vector, kingTarget)
+                    for vec in walked:
+                        if board.isThreatened(vec, piece.color):
+                            break
+                    else:
+                        destList.append(kingTarget)
         return destList
 
     @classmethod
