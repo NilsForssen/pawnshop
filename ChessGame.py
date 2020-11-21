@@ -43,15 +43,20 @@ class ScrollableLabel(tk.Frame):
         self.label.bind("<Configure>",
             lambda e: self.canvas.configure(
                 scrollregion=self.canvas.bbox("all")))
+        self.canvas.bind("<Configure>", self.resize)
+
+    def resize(self, event):
+        self.label.configure(wraplength=event.width - 10)
 
 
-class ChessFrame(tk.Frame):
-    def __init__(self, master, board, **kwargs):
-        super().__init__(master, **kwargs, bg="red")
+class ChessGame(tk.Tk):
+    def __init__(self, boardInit, *args, **kwargs):
+        super().__init__()
 
         # Geometry managment
+        self.minsize(600, 400)
         self.grid_rowconfigure((0, 1), weight=1)
-        self.grid_columnconfigure(0, weight=4)
+        self.grid_columnconfigure(0, weight=10)
         self.grid_columnconfigure(1, weight=1)
 
         self.boardCanv = tk.Canvas(self, width=400, height=400, bg="black", highlightthickness=0)
@@ -71,7 +76,9 @@ class ChessFrame(tk.Frame):
         self.evalFrame.grid_propagate(0)
 
         # Chesscanvas related
-        self.board = board
+        self.boardInit = boardInit
+        self.boardInitArgs = (args, kwargs)
+        self.board = boardInit(*args, **kwargs)
         self.turnorder = self.board.turnorder
         self.currentTurn = self.turnorder[0]
         self.selected = None
@@ -103,8 +110,8 @@ class ChessFrame(tk.Frame):
         self.evalString = tk.StringVar(self)
 
         # Fonts
-        self.headingFont = Font(family="Curier", size=20, weight="bold")
-        self.labelFont = Font(family="Curier", size=20, weight="bold")
+        self.headingFont = Font(family="Curier", size=18, weight="bold")
+        self.labelFont = Font(family="Curier", size=12, weight="normal")
 
         # Labels
         self.historyHeading = tk.Label(self.historyFrame, text="HISTORY", font=self.headingFont)
@@ -112,14 +119,35 @@ class ChessFrame(tk.Frame):
         self.historyLabel = ScrollableLabel(self.historyFrame)
         self.evalLabel = ScrollableLabel(self.evalFrame)
 
+        self.historyLabel.label.configure(textvariable=self.historyString, justify="left", font=self.labelFont)
+        self.evalLabel.label.configure(justify="left", font=self.labelFont)
+
         self.historyHeading.grid(row=0, column=0, sticky="NSEW")
         self.evalHeading.grid(row=0, column=0, sticky="NSEW")
         self.historyLabel.grid(row=1, column=0, sticky="NSEW")
         self.evalLabel.grid(row=1, column=0, sticky="NSEW")
 
+        # Menu
+        self.menuBar = tk.Menu(self, tearoff=0)
+        self.fileMenu = tk.Menu(self.menuBar)
+        self.fileMenu.add_command(label="Restart", command=self.reInitBoard)
+        self.menuBar.add_cascade(label="Game", menu=self.fileMenu)
+
+        self.config(menu=self.menuBar)
+
         # Chesscanvas actions
         self.boardCanv.bind("<Configure>", self.resize)
         self.boardCanv.bind("<Button-1>", self.chessInteract)
+
+        # Mainloop
+        self.mainloop()
+
+    def reInitBoard(self):
+        self.board = self.boardInit()
+        self.turnorder = self.board.turnorder
+        self.currentTurn = self.turnorder[0]
+        self.clearHighlights()
+        self.update()
 
     def getImage(self, piece):
         """Get image of given piece"""
@@ -148,7 +176,7 @@ class ChessFrame(tk.Frame):
     def moveSelected(self, vector):
         try:
             try:
-                print(self.board.movePiece(self.selected.vector, vector))
+                self.board.movePiece(self.selected.vector, vector)
             except PromotionError:
                 msg = "What do you want the pawn to promote to?"
                 while True:
@@ -157,7 +185,7 @@ class ChessFrame(tk.Frame):
                         break
                     try:
                         pType = {pType.__name__: pType for pType in self.board.promoteTo[self.selected.color]}[prompt.lower().capitalize()]
-                        print(self.board.movePiece(self.selected.vector, vector, promote=pType))
+                        self.board.movePiece(self.selected.vector, vector, promote=pType)
                         break
                     except KeyError:
                         msg = prompt + "is Not a valid piece, must be any of \n" + "\n".join([pType.__name__ for pType in self.board.promoteTo[self.selected.color]])
@@ -214,7 +242,6 @@ class ChessFrame(tk.Frame):
     def update(self, *args):
         """Update all widgets of frame"""
         self.historyString.set(readable(self.board.history, 2))
-        print(readable(self.board.history, 2))
         self.photos = []
 
         for (row, col), square in self.squares.items():
@@ -243,13 +270,5 @@ class ChessFrame(tk.Frame):
                         image=photoImg)
 
 
-root = tk.Tk()
-
-root.grid_rowconfigure(0, weight=1)
-root.grid_columnconfigure(0, weight=1)
-
-chessFrame = ChessFrame(root, board=initClassic(), height=400, width=400)
-chessFrame.grid(row=0, column=0, sticky="NSEW")
-
-root.minsize(400, 240)
-root.mainloop()
+if __name__ == "__main__":
+    ChessGame(boardInit=initClassic)

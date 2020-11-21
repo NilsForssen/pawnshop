@@ -1,10 +1,10 @@
-from copy import deepcopy, copy
-from Utils import getResourcePath, countAlpha, unpackIndexSlices
-from Exceptions import *
+# ChessBoard.py
 
-from configurations import ClassicConfig, FourPlayerConfig
 import json
-import os
+from copy import deepcopy, copy
+from Utils import getResourcePath, countAlpha
+from Exceptions import *
+from configurations import ClassicConfig, FourPlayerConfig
 from Pieces import *
 
 
@@ -294,14 +294,15 @@ class Board():
 
 
 def initClassic():
+
     board = Board()
-    board.setup(ClassicConfig.CONFIG)
+    board.setup(deepcopy(ClassicConfig.CONFIG))
     return board
 
 
 def init4P():
     board = Board()
-    board.setup(FourPlayerConfig.CONFIG)
+    board.setup(deepcopy(FourPlayerConfig.CONFIG))
     return board
 
 

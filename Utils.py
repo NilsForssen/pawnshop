@@ -51,20 +51,6 @@ def _positivePos(func):
     return wrapper
 
 
-def unpackIndexSlices(idx):
-    try:
-        r, c = idx
-    except (TypeError, ValueError):
-        raise ValueError("Index position must be 2-dimensional.") from None
-
-    if type(r) is not slice:
-        r = slice(r, r + 1)
-    if type(c) is not slice:
-        c = slice(c, c + 1)
-
-    return r, c
-
-
 def createNotation(board, startPiece, targetVec, isPawn=False, capture=False):
     notation = ""
     targetNot = targetVec.getStr(board)
