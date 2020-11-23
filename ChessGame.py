@@ -1,7 +1,8 @@
 # ChessGame.py
 
 import tkinter as tk
-from tkinter import simpledialog, messagebox
+import webbrowser
+from tkinter import simpledialog, messagebox, filedialog
 from tkinter.font import Font
 from PIL import ImageTk
 from ChessBoard import initClassic
@@ -9,7 +10,7 @@ from Pieces import Piece, Empty, Disabled
 from Utils import getResourcePath, fetchImage
 from ChessVector import ChessVector
 from Exceptions import PromotionError, Illegal
-from formatPGN import *
+from GameNotations import *
 
 
 IMAGEDIR = getResourcePath(__file__, "Sprites\\")
@@ -127,11 +128,24 @@ class ChessGame(tk.Tk):
         self.historyLabel.grid(row=1, column=0, sticky="NSEW")
         self.evalLabel.grid(row=1, column=0, sticky="NSEW")
 
-        # Menu
+        # Menubar
         self.menuBar = tk.Menu(self, tearoff=0)
-        self.fileMenu = tk.Menu(self.menuBar)
-        self.fileMenu.add_command(label="Restart", command=self.reInitBoard)
-        self.menuBar.add_cascade(label="Game", menu=self.fileMenu)
+
+        self.gameMenu = tk.Menu(self.menuBar)
+        self.gameMenu.add_command(label="Save PGN", command=self.exportPGN)
+        self.gameMenu.add_command(label="Load PGN", command=self.importPGN)
+        self.gameMenu.add_command(label="Copy FEN", command=self.exportFEN)
+        self.gameMenu.add_command(label="Paste FEN", command=self.importFEN)
+        self.gameMenu.add_separator()
+        self.gameMenu.add_command(label="Reset", command=self.reInitBoard)
+
+        self.onlineMenu = tk.Menu(self.menuBar)
+        self.onlineMenu.add_command(label="Host game")
+        self.onlineMenu.add_command(label="Join game")
+
+        self.menuBar.add_cascade(label="Game", menu=self.gameMenu)
+        self.menuBar.add_cascade(label="Online", menu=self.onlineMenu)
+        self.menuBar.add_command(label="Help", command=lambda: webbrowser.open("https://www.google.com/"))
 
         self.config(menu=self.menuBar)
 
@@ -142,8 +156,38 @@ class ChessGame(tk.Tk):
         # Mainloop
         self.mainloop()
 
-    def reInitBoard(self):
-        self.board = self.boardInit()
+    def importPGN(self):
+        try:
+            with filedialog.askopenfile(title="Open PGN file", filetypes=[("PGN file", ".pgn"), ("Text file", ".txt")]) as file:
+                moves = PGN2Board(file.load())
+
+            self.reInitBoard()
+            for move in moves:
+                try:
+                    self.board.movePiece(*move)
+                except Illegal:
+                    raise ValueError("PGN not valid") from None
+
+        except AttributeError:
+            print("Closed dialog")
+
+    def exportPGN(self):
+        try:
+            with filedialog.asksaveasfile(title="Save PGN file", filetypes=[("PGN file", ".pgn")]) as file:
+                file.write(history2PGN(self.board.history, players=2))
+        except AttributeError:
+            print("Closed dialog")
+
+    def exportFEN(self):
+        self.clipboard_append(board2FEN(self.board))
+        simpledialog.messagebox.showinfo("FEN Copied!", "FEN-string has been copied to clipboard!")
+
+    def importFEN(self):
+        FEN = simpledialog.askstring("Load FEN!", "Enter a FEN string to load into the board.")
+        self.reInitBoard(board=FEN2Board(FEN))
+
+    def reInitBoard(self, board=None):
+        self.board = board or self.boardInit()
         self.turnorder = self.board.turnorder
         self.currentTurn = self.turnorder[0]
         self.clearHighlights()

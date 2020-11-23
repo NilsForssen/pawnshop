@@ -127,7 +127,7 @@ class CastleK(_Castling):
     @classmethod
     def action(thisMove, *args, **kwargs):
         super().action(*args, **kwargs)
-        return "0-0"
+        return "O-O"
 
 
 class CastleQ(_Castling):
@@ -151,7 +151,7 @@ class CastleQ(_Castling):
     @classmethod
     def action(thisMove, *args, **kwargs):
         super().action(*args, **kwargs)
-        return "0-0-0"
+        return "O-O-O"
 
 
 class EnPassant(Move):
