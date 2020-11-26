@@ -91,23 +91,7 @@ class ChessGame(tk.Tk):
         self.blackbarTop, self.blackbarBottom, self.blackbarLeft, self.blackbarRight = 0, 0, 0, 0
 
         # Generate board and pieceimages
-        self.squares = {}
-        self.images = {}
-
-        for i, piece in enumerate(self.board):
-            color = ("saddle brown", "white")[(i + int((i) / self.board.cols)) % 2 == 0]
-            if not isinstance(piece, Disabled):
-                pos = piece.vector
-                self.squares[pos.tuple()] = (self.boardCanv.create_rectangle(
-                    self.blackbarLeft + (pos.col * self.square),
-                    self.blackbarTop + (pos.row * self.square),
-                    self.blackbarLeft + ((pos.col + 1) * self.square),
-                    self.blackbarTop + ((pos.row + 1) * self.square),
-                    fill=color,
-                    outline="black"))
-
-                if not isinstance(piece, Empty):
-                    self.getImage(piece)
+        self.createBoard()
 
         # Variables
         self.historyString = tk.StringVar(self)
@@ -167,6 +151,25 @@ class ChessGame(tk.Tk):
         # Mainloop
         self.mainloop()
 
+    def createBoard(self):
+        self.squares = {}
+        self.images = {}
+
+        for i, piece in enumerate(self.board):
+            color = ("saddle brown", "white")[(i + int((i) / self.board.cols)) % 2 == 0]
+            if not isinstance(piece, Disabled):
+                pos = piece.vector
+                self.squares[pos.tuple()] = (self.boardCanv.create_rectangle(
+                    self.blackbarLeft + (pos.col * self.square),
+                    self.blackbarTop + (pos.row * self.square),
+                    self.blackbarLeft + ((pos.col + 1) * self.square),
+                    self.blackbarTop + ((pos.row + 1) * self.square),
+                    fill=color,
+                    outline="black"))
+
+                if not isinstance(piece, Empty):
+                    self.getImage(piece)
+
     def importPGN(self):
         try:
             with filedialog.askopenfile(title="Open PGN file", filetypes=[("PGN file", ".pgn"), ("Text file", ".txt")]) as file:
@@ -198,13 +201,14 @@ class ChessGame(tk.Tk):
         self.reInitBoard(board=FEN2Board(FEN))
 
     def reInitBoard(self, boardType=None):
-        if not boardType:
-            boardType = self.currentBoard
-
-        self.board = self.boardInits[boardType]()
+        if boardType is not None:
+            self.currentBoard = boardType
+        self.board = self.boardInits[self.currentBoard]()
         self.turnorder = self.board.turnorder
         self.currentTurn = self.turnorder[0]
-        self.clearHighlights()
+        self.resize()
+        self.boardCanv.delete("all")
+        self.createBoard()
         self.update()
 
     def getImage(self, piece):
@@ -299,7 +303,7 @@ class ChessGame(tk.Tk):
 
     def update(self, *args):
         """Update all widgets of frame"""
-        self.historyString.set(readable(self.board.history, 2))
+        self.historyString.set(readable(self.board.history, len(self.board.turnorder)))
         self.photos = []
 
         for (row, col), square in self.squares.items():
