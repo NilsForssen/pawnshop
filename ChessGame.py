@@ -5,7 +5,7 @@ import webbrowser
 from tkinter import simpledialog, messagebox, filedialog
 from tkinter.font import Font
 from PIL import ImageTk
-from ChessBoard import initClassic
+from ChessBoard import initClassic, init4P
 from Pieces import Piece, Empty, Disabled
 from Utils import getResourcePath, fetchImage
 from ChessVector import ChessVector
@@ -51,7 +51,7 @@ class ScrollableLabel(tk.Frame):
 
 
 class ChessGame(tk.Tk):
-    def __init__(self, boardInit, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__()
 
         # Geometry managment
@@ -77,9 +77,12 @@ class ChessGame(tk.Tk):
         self.evalFrame.grid_propagate(0)
 
         # Chesscanvas related
-        self.boardInit = boardInit
-        self.boardInitArgs = (args, kwargs)
-        self.board = boardInit(*args, **kwargs)
+        self.boardInits = {
+            "Classic": initClassic,
+            "4P": init4P
+        }
+        self.currentBoard = "4P"
+        self.board = self.boardInits[self.currentBoard]()
         self.turnorder = self.board.turnorder
         self.currentTurn = self.turnorder[0]
         self.selected = None
@@ -132,20 +135,28 @@ class ChessGame(tk.Tk):
         self.menuBar = tk.Menu(self, tearoff=0)
 
         self.gameMenu = tk.Menu(self.menuBar)
+        self.newGameMenu = tk.Menu(self.menuBar)
+        self.onlineMenu = tk.Menu(self.menuBar)
+
+        self.newGameMenu.add_command(label="Classic", command=lambda: self.reInitBoard("Classic"))
+        self.newGameMenu.add_command(label="Four Players", command=lambda: self.reInitBoard("4P"))
+
         self.gameMenu.add_command(label="Save PGN", command=self.exportPGN)
         self.gameMenu.add_command(label="Load PGN", command=self.importPGN)
         self.gameMenu.add_command(label="Copy FEN", command=self.exportFEN)
         self.gameMenu.add_command(label="Paste FEN", command=self.importFEN)
         self.gameMenu.add_separator()
+        self.gameMenu.add_cascade(label="New Game", menu=self.newGameMenu)
         self.gameMenu.add_command(label="Reset", command=self.reInitBoard)
+        self.gameMenu.add_separator()
+        self.gameMenu.add_command(label="Exit", command=lambda: self.destroy())
 
-        self.onlineMenu = tk.Menu(self.menuBar)
         self.onlineMenu.add_command(label="Host game")
         self.onlineMenu.add_command(label="Join game")
 
         self.menuBar.add_cascade(label="Game", menu=self.gameMenu)
         self.menuBar.add_cascade(label="Online", menu=self.onlineMenu)
-        self.menuBar.add_command(label="Help", command=lambda: webbrowser.open("https://www.google.com/"))
+        self.menuBar.add_command(label="Help", command=lambda: webbrowser.open("https://www.bible.com/sv"))
 
         self.config(menu=self.menuBar)
 
@@ -186,8 +197,11 @@ class ChessGame(tk.Tk):
         FEN = simpledialog.askstring("Load FEN!", "Enter a FEN string to load into the board.")
         self.reInitBoard(board=FEN2Board(FEN))
 
-    def reInitBoard(self, board=None):
-        self.board = board or self.boardInit()
+    def reInitBoard(self, boardType=None):
+        if not boardType:
+            boardType = self.currentBoard
+
+        self.board = self.boardInits[boardType]()
         self.turnorder = self.board.turnorder
         self.currentTurn = self.turnorder[0]
         self.clearHighlights()
@@ -315,4 +329,4 @@ class ChessGame(tk.Tk):
 
 
 if __name__ == "__main__":
-    ChessGame(boardInit=initClassic)
+    ChessGame()

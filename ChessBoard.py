@@ -223,6 +223,7 @@ class Board():
                                         newPiece = promote(startPiece.color)
                                         newPiece.move(startPiece.vector)
                                         board[startPiece.vector] = newPiece
+                                        notation += "=" + newPiece.symbol
                                 break
 
                         if checkForCheck:
