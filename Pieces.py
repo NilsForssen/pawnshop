@@ -1,7 +1,12 @@
+# Pieces.py
+
+from copy import deepcopy
 from abc import ABC, abstractmethod
 from Utils import (
     _catchOutofBounce,
-    _positivePos)
+    _positivePos,
+    removeDupes
+)
 from ChessVector import ChessVector
 
 
@@ -31,12 +36,25 @@ class Piece(ABC):
         """Returns standard destinations of piece in board"""
         raise NotImplementedError
 
-    def getMoves(self, board):
+    def getMoves(self, board, ignoreCheck=False):
         """Returns board-specific moves of piece in board"""
         destList = []
         for move in board.moves[self.color]:
             if move.pieceCondition(self):
                 destList.extend(move.getDestinations(self, board))
+
+        remove = []
+        if not ignoreCheck:
+            for dest in destList:
+                print(id(self))
+                testBoard = deepcopy(board)
+                testBoard.movePiece(self.vector, dest, checkForMate=False, printOut=False)
+                if testBoard.checks[self.color]:
+                    remove.append(dest)
+
+        for dest in remove:
+            destList.remove(dest)
+
         return destList
 
     def move(self, destVector):
@@ -188,7 +206,7 @@ class King(Piece):
 
     def getStandardMoves(self, board):
         destList = []
-        for offsetVec in [vec for vecList in _directions.values() for vec in vecList]:
+        for offsetVec in removeDupes([vec for vecList in _directions.values() for vec in vecList]):
             destVec = self.vector + offsetVec
             if self.canMove(destVec, board):
                 destList.append(destVec)

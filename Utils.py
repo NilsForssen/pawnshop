@@ -51,6 +51,15 @@ def _positivePos(func):
     return wrapper
 
 
+def removeDupes(vectorList):
+    for i, superVec in enumerate(vectorList):
+        if superVec.matches(vectorList[i + 1::]):
+            vectorList.remove(superVec)
+            return removeDupes(vectorList)
+    else:
+        return vectorList
+
+
 def createNotation(board, startPiece, targetVec, isPawn=False, capture=False):
     notation = ""
     targetNot = targetVec.getStr(board)
@@ -59,7 +68,7 @@ def createNotation(board, startPiece, targetVec, isPawn=False, capture=False):
         notation = startPiece.symbol
         for piece in board.pieces[startPiece.color]:
             if not piece is startPiece and isinstance(piece, type(startPiece)):
-                if targetVec.matches(piece.getMoves(board)):
+                if targetVec.matches(piece.getMoves(board, ignoreCheck=True)):
                     if piece.vector.col == startPiece.vector.col:
                         notation += invertIdx(startPiece.vector.row, board)
                     else:

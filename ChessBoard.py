@@ -138,13 +138,13 @@ class Board():
         hostilePieces = [piece for col, pList in self.pieces.items() if col != alliedColor for piece in pList]
 
         for hp in hostilePieces:
-            hostile = hp.getMoves(self)
+            hostile = hp.getMoves(self, ignoreCheck=True)
             if vector in hostile:
                 return True
         else:
             return False
 
-    def checkForCheck(self, ignoreMate=False):
+    def checkForCheck(self, checkForMate=True):
 
         colorList = list(self.pieces.keys())
 
@@ -158,27 +158,31 @@ class Board():
             else:
                 self.checks[color] = False
 
-            if self.checks[color] and not ignoreMate:
+            if self.checks[color] and checkForMate:
 
                 alliedPiecesPos = map(lambda p: p.vector, self.pieces[color])
 
                 for alliedPos in list(alliedPiecesPos):
 
-                    for move in self[alliedPos].getMoves(self):
+                    for move in self[alliedPos].getMoves(self, ignoreCheck=True):
+                        testBoard = deepcopy(self)
+                        for pieceType in [None, *self.promoteTo[color]]:
 
-                        try:
-                            for pieceType in [None, *self.promoteTo[color]]:
-                                try:
-                                    self.movePiece(alliedPos, move, ignoreMate=True,
-                                                   testMove=True, checkForMate=False, promote=pieceType)
-                                except PromotionError:
+                            try:
+                                testBoard.movePiece(alliedPos, move, ignoreMate=True,
+                                                    checkForMate=False, promote=pieceType,
+                                                    printOut=False)
+                                if testBoard.checks[color]:
+                                    testBoard = deepcopy(self)
                                     continue
-                        except Check:
-                            pass
-
+                                else:
+                                    break
+                            except PromotionError:
+                                continue
                         else:
-                            self.checkmates[color] = False
-                            break
+                            continue
+                        self.checkmates[color] = False
+                        break
 
                     else:
                         continue
@@ -191,9 +195,8 @@ class Board():
                 self.checks[color] = True
 
     def movePiece(self, startVec, targetVec,
-                  raw=False, ignoreCheck=False, ignoreMate=False,
-                  testMove=False, checkForCheck=True, checkForMate=True,
-                  promote=None, **kwargs):
+                  ignoreMate=False, checkForCheck=True,
+                  checkForMate=True, promote=None, printOut=True):
 
         if self.isEmpty(startVec):
             raise EmptyError(startVec.getStr(self))
@@ -203,61 +206,53 @@ class Board():
         if self.checkmates[startPiece.color] and not ignoreMate:
             raise CheckMate
 
-        for board in (deepcopy(self), self):
+        for move in self.moves[startPiece.color]:
+            if move.pieceCondition(startPiece):
+                if targetVec in move.getDestinations(startPiece, self):
+                    notation = move.action(startPiece, targetVec, self)
+                    for pieceType in self.promoteFrom[startPiece.color]:
+                        if isinstance(startPiece, pieceType):
+                            if startPiece.rank == self.promoteAt[startPiece.color]:
+                                if promote is None:
+                                    raise PromotionError
+                                elif not promote in self.promoteTo[startPiece.color]:
+                                    raise PromotionError(
+                                        f"{startPiece.color} cannot promote to {promote}!")
+                                else:
+                                    newPiece = promote(startPiece.color)
+                                    newPiece.move(startPiece.vector)
+                                    self[startPiece.vector] = newPiece
+                                    notation += "=" + newPiece.symbol
+                            break
 
-            startPiece = board[startVec]
+                    if checkForCheck:
+                        self.checkForCheck(checkForMate=checkForMate)
+                    break
 
-            for move in board.moves[startPiece.color]:
-                if move.pieceCondition(startPiece):
-                    if raw or targetVec in move.getDestinations(startPiece, board):
-                        notation = move.action(startPiece, targetVec, board)
-                        for pieceType in self.promoteFrom[startPiece.color]:
-                            if isinstance(startPiece, pieceType):
-                                if startPiece.rank == self.promoteAt[startPiece.color]:
-                                    if promote is None:
-                                        raise PromotionError
-                                    elif not promote in self.promoteTo[startPiece.color]:
-                                        raise PromotionError(
-                                            f"{startPiece.color} cannot promote to {promote}!")
-                                    else:
-                                        newPiece = promote(startPiece.color)
-                                        newPiece.move(startPiece.vector)
-                                        board[startPiece.vector] = newPiece
-                                        notation += "=" + newPiece.symbol
-                                break
+        else:
+            raise IllegalMove(startVec.getStr(self), targetVec.getStr(self))
 
-                        if checkForCheck:
-                            board.checkForCheck(ignoreMate=not checkForMate)
-                            if not ignoreCheck and board.checks[startPiece.color]:
-                                raise Check
-
-                        break
-
-            else:
-                raise IllegalMove(startVec.getStr(self), targetVec.getStr(self))
-
-            if testMove:
-                break
-
-        if not testMove:
-            for color in self.checks.keys():
-                if self.checkmates[color]:
+        for color in self.checks.keys():
+            if self.checkmates[color]:
+                if printOut:
                     print(f"{color} in Checkmate!")
-                    if not "#" in notation:
-                        notation += "#"
+                if not "#" in notation:
+                    notation += "#"
 
-                elif self.checks[color]:
+            elif self.checks[color]:
+                if printOut:
                     print(f"{color} in Check!")
-                    if not "+" in notation:
-                        notation += "+"
+                if not "+" in notation:
+                    notation += "+"
 
-            for piece in [p for pList in self.pieces.values() for p in pList]:
+        for piece in [p for pList in self.pieces.values() for p in pList]:
 
-                if not piece is startPiece:
-                    piece.postAction(self)
+            if not piece is startPiece:
+                piece.postAction(self)
 
-            self.history.append(notation)
-
+        self.history.append(notation)
+        if printOut:
+            print(notation)
         return notation
 
     def _addPiece(self, piece, vector):

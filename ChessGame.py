@@ -81,10 +81,11 @@ class ChessGame(tk.Tk):
             "Classic": initClassic,
             "4P": init4P
         }
-        self.currentBoard = "4P"
+        self.currentBoard = "Classic"
         self.board = self.boardInits[self.currentBoard]()
         self.turnorder = self.board.turnorder
         self.currentTurn = self.turnorder[0]
+        self.kingsInCheck = []
         self.selected = None
 
         self.square = 64
@@ -204,6 +205,7 @@ class ChessGame(tk.Tk):
         if boardType is not None:
             self.currentBoard = boardType
         self.board = self.boardInits[self.currentBoard]()
+        self.selected = None
         self.turnorder = self.board.turnorder
         self.currentTurn = self.turnorder[0]
         self.resize()
@@ -227,48 +229,53 @@ class ChessGame(tk.Tk):
     def chessInteract(self, event, *args):
         if event.x + self.blackbarRight < self.winfo_width() and event.x - self.blackbarLeft > 0 and event.y + self.blackbarBottom < self.winfo_height() and event.y - self.blackbarTop > 0:
             vec = ChessVector((int((event.y - self.blackbarTop) / self.square), int((event.x - self.blackbarRight) / self.square)))
-            if self.selected is None:
-                self.select(vec)
-            else:
-                if vec in self.selected.getMoves(self.board):
+            piece = self.board[vec]
+
+            if self.selected is not None:
+                moves = self.selected.getMoves(self.board)
+                if vec.matches(moves):
                     self.moveSelected(vec)
+                    self.clearHighlights()
+
+                elif vec == self.selected.vector:
+                    self.clearHighlights()
                 else:
-                    self.select(vec)
+                    if isinstance(piece, Piece) and piece.color == self.currentTurn:
+                        self.select(piece, highlights=piece.getMoves(self.board))
+                    else:
+                        self.clearHighlights()
+            else:
+                if isinstance(piece, Piece) and piece.color == self.currentTurn:
+                    print("here")
+                    self.select(piece, highlights=piece.getMoves(self.board))
+                else:
+                    self.clearHighlights()
 
     def moveSelected(self, vector):
         try:
-            try:
-                self.board.movePiece(self.selected.vector, vector)
-            except PromotionError:
-                msg = "What do you want the pawn to promote to?"
-                while True:
-                    prompt = simpledialog.askstring("Promote!", msg)
-                    if prompt is None:
-                        break
-                    try:
-                        pType = {pType.__name__: pType for pType in self.board.promoteTo[self.selected.color]}[prompt.lower().capitalize()]
-                        self.board.movePiece(self.selected.vector, vector, promote=pType)
-                        break
-                    except KeyError:
-                        msg = prompt + "is Not a valid piece, must be any of \n" + "\n".join([pType.__name__ for pType in self.board.promoteTo[self.selected.color]])
-                        continue
+            self.board.movePiece(self.selected.vector, vector)
+        except PromotionError:
+            msg = "What do you want the pawn to promote to?"
+            while True:
+                prompt = simpledialog.askstring("Promote!", msg)
+                if prompt is None:
+                    break
+                try:
+                    pType = {pType.__name__: pType for pType in self.board.promoteTo[self.selected.color]}[prompt.lower().capitalize()]
+                    self.board.movePiece(self.selected.vector, vector, promote=pType)
+                    break
+                except KeyError:
+                    msg = prompt + "is Not a valid piece, must be any of \n" + "\n".join([pType.__name__ for pType in self.board.promoteTo[self.selected.color]])
+                    continue
 
-            self.clearHighlights()
-            self.advanceTurn()
-            self.update()
+        self.advanceTurn()
+        self.update()
 
-        except Illegal as e:
-            messagebox.showerror(title="Illegal", message=e)
-
-    def select(self, vec):
+    def select(self, piece, highlights=None):
         self.clearHighlights()
-        piece = self.board[vec]
-        if isinstance(piece, Piece) and piece.color == self.currentTurn:
-            self.selected = piece
-            self.boardCanv.itemconfigure(self.squares[piece.vector.tuple()], fill="light goldenrod")
-            self.highlight(piece.getMoves(self.board))
-        else:
-            self.selected = None
+        self.selected = piece
+        self.boardCanv.itemconfigure(self.squares[piece.vector.tuple()], fill="light goldenrod")
+        self.highlight(highlights)
 
     def advanceTurn(self):
         idx = self.turnorder.index(self.currentTurn)
@@ -278,13 +285,21 @@ class ChessGame(tk.Tk):
             self.currentTurn = self.turnorder[0]
 
     def clearHighlights(self):
+        self.selected = None
         for i, piece in enumerate(self.board):
             color = ("saddle brown", "white")[(i + int((i) / self.board.cols)) % 2 == 0]
             if not isinstance(piece, Disabled):
                 square = self.squares[piece.vector.tuple()]
                 if self.boardCanv.itemcget(square, "fill") != color:
                     self.boardCanv.itemconfig(square, fill=color)
-        self.selected = None
+
+        for color, check in self.board.checks.items():
+            if check:
+                for alliedKing in self.board.kings[color]:
+                    if self.board.isThreatened(alliedKing.vector, color):
+                        self.boardCanv.itemconfigure(self.squares[alliedKing.vector.tuple()], fill="red")
+                        self.kingsInCheck.append(alliedKing.vector)
+                        break
 
     def highlight(self, vecs):
         for vec in vecs:

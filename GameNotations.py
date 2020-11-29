@@ -61,7 +61,7 @@ def readable(historyList, players=2):
     while i * players < len(historyList):
         i += 1
         finalString += str(i) + ". " + " - ".join(historyList[(i - 1) * players:i * players:1]) + "\n"
-    return finalString
+    return finalString.strip()
 
 
 if __name__ == "__main__":
