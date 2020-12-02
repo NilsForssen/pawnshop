@@ -1,6 +1,7 @@
 # Pieces.py
 
 from copy import deepcopy
+import threading
 from abc import ABC, abstractmethod
 from Utils import (
     _catchOutofBounce,
@@ -36,24 +37,32 @@ class Piece(ABC):
         """Returns standard destinations of piece in board"""
         raise NotImplementedError
 
-    def getMoves(self, board, ignoreCheck=False):
+    def getMoves(self, board, ignoreCheck=False, useThreading=True):
         """Returns board-specific moves of piece in board"""
         destList = []
         for move in board.moves[self.color]:
             if move.pieceCondition(self):
                 destList.extend(move.getDestinations(self, board))
 
-        remove = []
         if not ignoreCheck:
-            for dest in destList:
-                print(id(self))
+            remove = []
+
+            def this(dest):
                 testBoard = deepcopy(board)
                 testBoard.movePiece(self.vector, dest, checkForMate=False, printOut=False)
                 if testBoard.checks[self.color]:
                     remove.append(dest)
 
-        for dest in remove:
-            destList.remove(dest)
+                for dest in destList:
+                    t = threading.Thread(target=this, args=[dest])
+                    t.start()
+
+                for t in threading.enumerate():
+                    if not t is threading.current_thread():
+                        t.join()
+
+            for dest in remove:
+                destList.remove(dest)
 
         return destList
 

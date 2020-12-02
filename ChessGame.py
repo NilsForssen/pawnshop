@@ -246,7 +246,6 @@ class ChessGame(tk.Tk):
                         self.clearHighlights()
             else:
                 if isinstance(piece, Piece) and piece.color == self.currentTurn:
-                    print("here")
                     self.select(piece, highlights=piece.getMoves(self.board))
                 else:
                     self.clearHighlights()
