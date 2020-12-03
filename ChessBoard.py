@@ -193,6 +193,7 @@ class Board():
             raise EmptyError(startVec.getStr(self))
 
         startPiece = self[startVec]
+        promo = False
 
         if self.checkmates[startPiece.color] and not ignoreMate:
             raise CheckMate
@@ -200,21 +201,24 @@ class Board():
         for move in self.moves[startPiece.color]:
             if move.pieceCondition(startPiece):
                 if targetVec in move.getDestinations(startPiece, self):
-                    notation = move.action(startPiece, targetVec, self)
                     for pieceType in self.promoteFrom[startPiece.color]:
                         if isinstance(startPiece, pieceType):
-                            if startPiece.rank == self.promoteAt[startPiece.color]:
+                            if self.rows - targetVec.row == self.promoteAt[startPiece.color]:
                                 if promote is None:
                                     raise PromotionError
-                                elif not promote in self.promoteTo[startPiece.color]:
+
+                                if not promote in self.promoteTo[startPiece.color]:
                                     raise PromotionError(
                                         f"{startPiece.color} cannot promote to {promote}!")
-                                else:
-                                    newPiece = promote(startPiece.color)
-                                    newPiece.move(startPiece.vector)
-                                    self[startPiece.vector] = newPiece
-                                    notation += "=" + newPiece.symbol
+
+                                promo = True
                             break
+                    notation = move.action(startPiece, targetVec, self)
+                    if promo:
+                        newPiece = promote(startPiece.color)
+                        newPiece.move(startPiece.vector)
+                        self[startPiece.vector] = newPiece
+                        notation += "=" + newPiece.symbol
 
                     if checkForCheck:
                         self.checkForCheck(checkForMate=checkForMate)
