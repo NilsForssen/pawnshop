@@ -146,29 +146,6 @@ class Board():
             return False
 
     def checkForCheck(self, checkForMate=True):
-        colorList = list(self.pieces.keys())
-        noMate = False
-
-        # def that(color, alliedPos):
-        #     for move in self[alliedPos].getMoves(self, ignoreCheck=True):
-        #         testBoard = deepcopy(self)
-        #         for pieceType in [None, *self.promoteTo[color]]:
-
-        #             try:
-        #                 testBoard.movePiece(alliedPos, move, ignoreMate=True,
-        #                                     checkForMate=False, promote=pieceType,
-        #                                     printOut=False)
-
-        #             except PromotionError:
-        #                 continue
-        #             else:
-        #                 break
-        #         if testBoard.checks[color]:
-        #             continue
-        #         else:
-        #             noMate = True
-        #             break
-
         for color in self.pieces.keys():
 
             for alliedKing in self.kings[color]:
@@ -179,21 +156,35 @@ class Board():
             else:
                 self.checks[color] = False
 
-            # if self.checks[color] and checkForMate:
+            if self.checks[color] and checkForMate:
+                print("matecall")
 
-            #     alliedPiecesPos = map(lambda p: p.vector, self.pieces[color])
+                alliedPiecesPos = map(lambda p: p.vector, self.pieces[color])
 
-            #     for alliedPos in list(alliedPiecesPos):
+                for alliedPos in list(alliedPiecesPos):
+                    for move in self[alliedPos].getMoves(self, ignoreCheck=True):
+                        testBoard = deepcopy(self)
+                        for pieceType in [None, *self.promoteTo[color]]:
+                            try:
+                                testBoard.movePiece(alliedPos, move, ignoreMate=True,
+                                                    checkForMate=False, promote=pieceType,
+                                                    printOut=False)
+                            except PromotionError:
+                                continue
+                            else:
+                                break
 
-            #         t = threading.Thread(target=that, args=[color, alliedPos])
-            #         t.start()
-
-            #     for t in threading.enumerate():
-            #         if not t is threading.current_thread():
-            #             t.join()
-            #     print(noMate)
-            #     self.checkmates[color] = noMate
-            #     self.checks[color] = True
+                        if testBoard.checks[color]:
+                            continue
+                        else:
+                            self.checkmates[color] = False
+                            break
+                    else:
+                        continue
+                    break
+                else:
+                    print("here2")
+                    self.checkmates[color] = True
 
     def movePiece(self, startVec, targetVec,
                   ignoreMate=False, checkForCheck=True,

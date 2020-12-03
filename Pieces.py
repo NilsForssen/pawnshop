@@ -47,19 +47,11 @@ class Piece(ABC):
         if not ignoreCheck:
             remove = []
 
-            def this(dest):
+            for dest in destList:
                 testBoard = deepcopy(board)
                 testBoard.movePiece(self.vector, dest, checkForMate=False, printOut=False)
                 if testBoard.checks[self.color]:
                     remove.append(dest)
-
-                for dest in destList:
-                    t = threading.Thread(target=this, args=[dest])
-                    t.start()
-
-                for t in threading.enumerate():
-                    if not t is threading.current_thread():
-                        t.join()
 
             for dest in remove:
                 destList.remove(dest)
