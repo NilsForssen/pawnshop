@@ -6,7 +6,6 @@ from Utils import getResourcePath, countAlpha
 from Exceptions import *
 from configurations import ClassicConfig, FourPlayerConfig
 from Pieces import *
-import time
 
 
 class Board():

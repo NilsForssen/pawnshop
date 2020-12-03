@@ -1,5 +1,5 @@
 # GmaNotations.py
-from copy import copy, deepcopy
+from copy import deepcopy
 from ChessBoard import initClassic, Board
 from configurations import ClassicConfig
 from ChessVector import ChessVector

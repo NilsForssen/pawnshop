@@ -1,7 +1,6 @@
 # Pieces.py
 
 from copy import deepcopy
-import threading
 from abc import ABC, abstractmethod
 from Utils import (
     _catchOutofBounce,
@@ -49,7 +48,7 @@ class Piece(ABC):
 
             for dest in destList:
                 testBoard = deepcopy(board)
-                testBoard.movePiece(self.vector, dest, checkForMate=False, printOut=False)
+                testBoard.movePiece(self.vector, dest, checkForMate=False, printOut=False, promote=Queen)
                 if testBoard.checks[self.color]:
                     remove.append(dest)
 

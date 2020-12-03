@@ -2,7 +2,7 @@
 
 import tkinter as tk
 import webbrowser
-from tkinter import simpledialog, messagebox, filedialog
+from tkinter import simpledialog, filedialog
 from tkinter.font import Font
 from PIL import ImageTk
 from ChessBoard import initClassic, init4P
