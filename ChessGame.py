@@ -2,7 +2,7 @@
 
 import tkinter as tk
 import webbrowser
-from tkinter import simpledialog, filedialog
+from tkinter import simpledialog, filedialog, messagebox
 from tkinter.font import Font
 from PIL import ImageTk
 from ChessBoard import initClassic, init4P
@@ -86,6 +86,7 @@ class ChessGame(tk.Tk):
         self.turnorder = self.board.turnorder
         self.currentTurn = self.turnorder[0]
         self.kingsInCheck = []
+        self.running = True
         self.selected = None
 
         self.square = 64
@@ -211,7 +212,7 @@ class ChessGame(tk.Tk):
         self.resize()
         self.boardCanv.delete("all")
         self.createBoard()
-        self.update()
+        self.updateGraphics()
 
     def getImage(self, piece):
         """Get image of given piece"""
@@ -227,28 +228,58 @@ class ChessGame(tk.Tk):
         return img
 
     def chessInteract(self, event, *args):
-        if event.x + self.blackbarRight < self.winfo_width() and event.x - self.blackbarLeft > 0 and event.y + self.blackbarBottom < self.winfo_height() and event.y - self.blackbarTop > 0:
-            vec = ChessVector((int((event.y - self.blackbarTop) / self.square), int((event.x - self.blackbarRight) / self.square)))
-            piece = self.board[vec]
+        if self.running:
+            if event.x + self.blackbarRight < self.boardCanv.winfo_width() and event.x - self.blackbarLeft > 0 and event.y + self.blackbarBottom < self.boardCanv.winfo_height() and event.y - self.blackbarTop > 0:
+                vec = ChessVector((int((event.y - self.blackbarTop) / self.square), int((event.x - self.blackbarRight) / self.square)))
 
-            if self.selected is not None:
-                moves = self.selected.getMoves(self.board)
-                if vec.matches(moves):
-                    self.moveSelected(vec)
-                    self.clearHighlights()
+                piece = self.board[vec]
 
-                elif vec == self.selected.vector:
-                    self.clearHighlights()
+                if self.selected is not None:
+                    moves = self.selected.getMoves(self.board)
+                    if vec.matches(moves):
+                        self.moveSelected(vec)
+
+                        if any(self.board.checks.values()):
+                            for color in [col for col, value in self.board.checks.items() if value]:
+                                for king in self.board.kings[color]:
+                                    if self.board.isThreatened(king.vector, color):
+                                        if king not in self.kingsInCheck:
+                                            self.kingsInCheck.append(king)
+                                    else:
+                                        if king in self.kingsInCheck:
+                                            self.kingsInCheck.remove(king)
+                        else:
+                            self.kingsInCheck = []
+
+                        self.clearHighlights()
+
+                    elif vec == self.selected.vector:
+                        self.clearHighlights()
+                    else:
+                        if isinstance(piece, Piece) and piece.color == self.currentTurn:
+                            self.select(piece, highlights=piece.getMoves(self.board))
+                        else:
+                            self.clearHighlights()
                 else:
                     if isinstance(piece, Piece) and piece.color == self.currentTurn:
                         self.select(piece, highlights=piece.getMoves(self.board))
                     else:
                         self.clearHighlights()
-            else:
-                if isinstance(piece, Piece) and piece.color == self.currentTurn:
-                    self.select(piece, highlights=piece.getMoves(self.board))
-                else:
-                    self.clearHighlights()
+
+                if any(self.board.checkmates.values()):
+                    while True:
+                        if len(self.board.checkmates.keys()) > 2:
+                            for color, value in self.board.checkmates.items():
+                                if value:
+                                    self.board.removeColor(color)
+                                    self.updateGraphics()
+                                    break
+                            else:
+                                break
+                        else:
+                            messagebox.showinfo("Checkmate!", f"{[color for color, value in self.board.checkmates.items() if value].pop()} has been checkmated!")
+                            self.running = False
+                            break
 
     def moveSelected(self, vector):
         try:
@@ -268,7 +299,7 @@ class ChessGame(tk.Tk):
                     continue
 
         self.advanceTurn()
-        self.update()
+        self.updateGraphics()
 
     def select(self, piece, highlights=None):
         self.clearHighlights()
@@ -292,13 +323,8 @@ class ChessGame(tk.Tk):
                 if self.boardCanv.itemcget(square, "fill") != color:
                     self.boardCanv.itemconfig(square, fill=color)
 
-        for color, check in self.board.checks.items():
-            if check:
-                for alliedKing in self.board.kings[color]:
-                    if self.board.isThreatened(alliedKing.vector, color):
-                        self.boardCanv.itemconfigure(self.squares[alliedKing.vector.tuple()], fill="red")
-                        self.kingsInCheck.append(alliedKing.vector)
-                        break
+        for king in self.kingsInCheck:
+            self.boardCanv.itemconfigure(self.squares[king.vector.tuple()], fill="red")
 
     def highlight(self, vecs):
         for vec in vecs:
@@ -313,9 +339,9 @@ class ChessGame(tk.Tk):
         self.blackbarTop = int((self.boardCanv.winfo_height() - (self.board.cols * self.square)) / 2)
         self.blackbarBottom = self.boardCanv.winfo_height() - self.blackbarTop - (self.board.rows * self.square)
 
-        self.update()
+        self.updateGraphics()
 
-    def update(self, *args):
+    def updateGraphics(self):
         """Update all widgets of frame"""
         self.historyString.set(readable(self.board.history, len(self.board.turnorder)))
         self.photos = []

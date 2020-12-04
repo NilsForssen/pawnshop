@@ -158,6 +158,9 @@ class ChessVector(object):
         else:
             return False
 
+    def copy(self):
+        return ChessVector((self.row, self.col))
+
 
 if __name__ == "__main__":
 

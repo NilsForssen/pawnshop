@@ -55,7 +55,7 @@ class Board():
 
         if len(index) != len(item):
             raise ValueError("List index expected {0} values to unpack but {1} were given".format(
-                expectedLen, givenLen))
+                len(item), len(index)))
 
         for i, vec in enumerate(index):
 
@@ -96,6 +96,11 @@ class Board():
             return res.pop()
         else:
             return res
+
+    def removeColor(self, color):
+        vectors = list(map(lambda p: p.vector, self.pieces[color]))
+        self[vectors] = [Empty(vector) for vector in vectors]
+        self.checkForCheck()
 
     def setup(self, config={}):
         with open(getResourcePath(__file__, "configurations/DefaultConfig.JSON"), "r") as default:
@@ -267,19 +272,21 @@ class Board():
 
     def _removePiece(self, piece):
 
-        try:
-            self.pieces[piece.color].remove(piece)
+        self.pieces[piece.color].remove(piece)
 
-            if isinstance(piece, King) and piece in self.kings[piece.color]:
-                self.kings[piece.color].remove(piece)
+        if isinstance(piece, King) and piece in self.kings[piece.color]:
+            self.kings[piece.color].remove(piece)
 
-            if not self.pieces[piece.color]:
-                self.pieces.pop(piece.color)
-                self.kings.pop(piece.color)
-                self.checks.pop(piece.color)
-                self.checkmates.pop(piece.color)
-        except Exception:
-            print("cant remove piece for some reason")
+        if not self.pieces[piece.color]:
+            del self.pieces[piece.color]
+            del self.promoteTo[piece.color]
+            del self.promoteFrom[piece.color]
+            del self.promoteAt[piece.color]
+            del self.kings[piece.color]
+            del self.checks[piece.color]
+            del self.checkmates[piece.color]
+
+            self.turnorder.remove(piece.color)
 
         piece.vector = None
 
