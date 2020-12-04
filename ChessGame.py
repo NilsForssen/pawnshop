@@ -9,7 +9,7 @@ from ChessBoard import initClassic, init4P
 from Pieces import Piece, Empty, Disabled
 from Utils import getResourcePath, fetchImage
 from ChessVector import ChessVector
-from Exceptions import PromotionError, Illegal
+from Exceptions import PromotionError, Illegal, DisabledError
 from GameNotations import *
 
 
@@ -232,54 +232,57 @@ class ChessGame(tk.Tk):
             if event.x + self.blackbarRight < self.boardCanv.winfo_width() and event.x - self.blackbarLeft > 0 and event.y + self.blackbarBottom < self.boardCanv.winfo_height() and event.y - self.blackbarTop > 0:
                 vec = ChessVector((int((event.y - self.blackbarTop) / self.square), int((event.x - self.blackbarRight) / self.square)))
 
-                piece = self.board[vec]
+                try:
+                    piece = self.board[vec]
+                except DisabledError:
+                    pass
+                else:
+                    if self.selected is not None:
+                        moves = self.selected.getMoves(self.board)
+                        if vec.matches(moves):
+                            self.moveSelected(vec)
 
-                if self.selected is not None:
-                    moves = self.selected.getMoves(self.board)
-                    if vec.matches(moves):
-                        self.moveSelected(vec)
+                            if any(self.board.checks.values()):
+                                for color in [col for col, value in self.board.checks.items() if value]:
+                                    for king in self.board.kings[color]:
+                                        if self.board.isThreatened(king.vector, color):
+                                            if king not in self.kingsInCheck:
+                                                self.kingsInCheck.append(king)
+                                        else:
+                                            if king in self.kingsInCheck:
+                                                self.kingsInCheck.remove(king)
+                            else:
+                                self.kingsInCheck = []
 
-                        if any(self.board.checks.values()):
-                            for color in [col for col, value in self.board.checks.items() if value]:
-                                for king in self.board.kings[color]:
-                                    if self.board.isThreatened(king.vector, color):
-                                        if king not in self.kingsInCheck:
-                                            self.kingsInCheck.append(king)
-                                    else:
-                                        if king in self.kingsInCheck:
-                                            self.kingsInCheck.remove(king)
+                            self.clearHighlights()
+
+                        elif vec == self.selected.vector:
+                            self.clearHighlights()
                         else:
-                            self.kingsInCheck = []
-
-                        self.clearHighlights()
-
-                    elif vec == self.selected.vector:
-                        self.clearHighlights()
+                            if isinstance(piece, Piece) and piece.color == self.currentTurn:
+                                self.select(piece, highlights=piece.getMoves(self.board))
+                            else:
+                                self.clearHighlights()
                     else:
                         if isinstance(piece, Piece) and piece.color == self.currentTurn:
                             self.select(piece, highlights=piece.getMoves(self.board))
                         else:
                             self.clearHighlights()
-                else:
-                    if isinstance(piece, Piece) and piece.color == self.currentTurn:
-                        self.select(piece, highlights=piece.getMoves(self.board))
-                    else:
-                        self.clearHighlights()
 
-                if any(self.board.checkmates.values()):
-                    while True:
-                        if len(self.board.checkmates.keys()) > 2:
-                            for color, value in self.board.checkmates.items():
-                                if value:
-                                    self.board.removeColor(color)
-                                    self.updateGraphics()
+                    if any(self.board.checkmates.values()):
+                        while True:
+                            if len(self.board.checkmates.keys()) > 2:
+                                for color, value in self.board.checkmates.items():
+                                    if value:
+                                        self.board.removeColor(color)
+                                        self.updateGraphics()
+                                        break
+                                else:
                                     break
                             else:
+                                messagebox.showinfo("Checkmate!", f"{[color for color, value in self.board.checkmates.items() if value].pop()} has been checkmated!")
+                                self.running = False
                                 break
-                        else:
-                            messagebox.showinfo("Checkmate!", f"{[color for color, value in self.board.checkmates.items() if value].pop()} has been checkmated!")
-                            self.running = False
-                            break
 
     def moveSelected(self, vector):
         try:

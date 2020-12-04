@@ -1,21 +1,22 @@
 from Pieces import *
 from abc import ABC, abstractclassmethod
 from Utils import createNotation
+from Exceptions import PromotionError
 
 class Move(ABC):
 
     @abstractclassmethod
-    def pieceCondition(thisMove, piece) -> bool:
+    def pieceCondition(thisMove, piece, *args, **kwargs) -> bool:
         """Test if piece satisfies move requirement"""
         raise NotImplementedError
 
     @abstractclassmethod
-    def getDestinations(thisMove, piece, board) -> list:
+    def getDestinations(thisMove, piece, board, *args, **kwargs) -> list:
         """Return list of possible destinations"""
         raise NotImplementedError
 
     @abstractclassmethod
-    def action(thisMove, startPiece, targetPos, board) -> str:
+    def action(thisMove, startPiece, targetPos, board, *args, **kwargs) -> str:
         """Move the piece"""
         raise NotImplementedError
 
@@ -27,11 +28,28 @@ class Standard(Move):
         return True
 
     @classmethod
-    def getDestinations(thisMove, piece, board):
+    def getDestinations(thisMove, piece, board, *args, **kwargs):
         return piece.getStandardMoves(board)
 
     @classmethod
-    def action(thisMove, startPiece, targetVec, board):
+    def action(thisMove, startPiece, targetVec, board, promote=None, *args, **kwargs):
+
+        promo = False
+
+        for pieceType in board.promoteFrom[startPiece.color]:
+            if isinstance(startPiece, pieceType):
+
+                if startPiece.rank + abs((startPiece.vector - targetVec).tuple()[startPiece.forwardVec.col]) == board.promoteAt[startPiece.color]:
+                    if promote is None:
+                        raise PromotionError
+
+                    if promote not in board.promoteTo[startPiece.color]:
+                        raise PromotionError(
+                            f"{startPiece.color} cannot promote to {promote}!")
+
+                    promo = True
+
+                break
 
         targetPiece = board[targetVec]
 
@@ -44,6 +62,11 @@ class Standard(Move):
             board.swapPositions(startPiece.vector, targetVec)
         else:
             board.swapPositions(startPiece.vector, targetVec)
+        if promo:
+            newPiece = promote(startPiece.color)
+            newPiece.move(startPiece.vector)
+            board[startPiece.vector] = newPiece
+            notation += "=" + newPiece.symbol
 
         return notation
 
@@ -51,11 +74,11 @@ class Standard(Move):
 class _Castling(Move):
 
     @classmethod
-    def pieceCondition(thisMove, piece):
+    def pieceCondition(thisMove, piece, *args, **kwargs):
         return piece.firstMove and isinstance(piece, King)
 
     @classmethod
-    def action(thisMove, startPiece, targetVec, board):
+    def action(thisMove, startPiece, targetVec, board, *args, **kwargs):
         for rook in thisMove.findRooks(startPiece, board):
             between = thisMove.findBetween(startPiece.vector, rook.vector)
             if targetVec in between:
@@ -109,7 +132,7 @@ class _Castling(Move):
 class CastleK(_Castling):
 
     @classmethod
-    def getDestinations(thisMove, piece, board):
+    def getDestinations(thisMove, piece, board, *args, **kwargs):
         destList = []
         if not board.checks[piece.color]:
             for rook in thisMove.findRooks(piece, board):
@@ -133,7 +156,7 @@ class CastleK(_Castling):
 class CastleQ(_Castling):
 
     @classmethod
-    def getDestinations(thisMove, piece, board):
+    def getDestinations(thisMove, piece, board, *args, **kwargs):
         destList = []
         if not board.checks[piece.color]:
             for rook in thisMove.findRooks(piece, board):
@@ -157,11 +180,11 @@ class CastleQ(_Castling):
 class EnPassant(Move):
 
     @classmethod
-    def pieceCondition(thisMove, piece):
+    def pieceCondition(thisMove, piece, *args, **kwargs):
         return isinstance(piece, Pawn)
 
     @classmethod
-    def getDestinations(thisMove, piece, board):
+    def getDestinations(thisMove, piece, board, *args, **kwargs):
         destList = []
         for diagVec in (piece.lDiagVec, piece.rDiagVec):
             checkVec = (piece.vector - piece.forwardVec) + diagVec
@@ -173,7 +196,7 @@ class EnPassant(Move):
         return destList
 
     @classmethod
-    def action(thisMove, piece, targetVec, board):
+    def action(thisMove, piece, targetVec, board, *args, **kwargs):
 
         notation = createNotation(board, piece, targetVec,
             isPawn=True, capture=True)

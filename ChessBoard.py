@@ -161,7 +161,6 @@ class Board():
                 self.checks[color] = False
 
             if self.checks[color] and checkForMate:
-                print("matecall")
 
                 alliedPiecesPos = map(lambda p: p.vector, self.pieces[color])
 
@@ -187,18 +186,16 @@ class Board():
                         continue
                     break
                 else:
-                    print("here2")
                     self.checkmates[color] = True
 
     def movePiece(self, startVec, targetVec,
                   ignoreMate=False, checkForCheck=True,
-                  checkForMate=True, promote=None, printOut=True):
+                  checkForMate=True, printOut=True, *args, **kwargs):
 
         if self.isEmpty(startVec):
             raise EmptyError(startVec.getStr(self))
 
         startPiece = self[startVec]
-        promo = False
 
         if self.checkmates[startPiece.color] and not ignoreMate:
             raise CheckMate
@@ -206,25 +203,7 @@ class Board():
         for move in self.moves[startPiece.color]:
             if move.pieceCondition(startPiece):
                 if targetVec in move.getDestinations(startPiece, self):
-                    for pieceType in self.promoteFrom[startPiece.color]:
-                        if isinstance(startPiece, pieceType):
-                            if self.rows - targetVec.row == self.promoteAt[startPiece.color]:
-                                if promote is None:
-                                    raise PromotionError
-
-                                if not promote in self.promoteTo[startPiece.color]:
-                                    raise PromotionError(
-                                        f"{startPiece.color} cannot promote to {promote}!")
-
-                                promo = True
-                            break
-                    notation = move.action(startPiece, targetVec, self)
-                    if promo:
-                        newPiece = promote(startPiece.color)
-                        newPiece.move(startPiece.vector)
-                        self[startPiece.vector] = newPiece
-                        notation += "=" + newPiece.symbol
-
+                    notation = move.action(startPiece, targetVec, self, *args, **kwargs)
                     if checkForCheck:
                         self.checkForCheck(checkForMate=checkForMate)
                     break
