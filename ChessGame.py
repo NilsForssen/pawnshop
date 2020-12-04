@@ -286,7 +286,7 @@ class ChessGame(tk.Tk):
 
     def moveSelected(self, vector):
         try:
-            self.board.movePiece(self.selected.vector, vector)
+            self.board.movePiece(self.selected.vector, vector, checkMove=False)
         except PromotionError:
             msg = "What do you want the pawn to promote to?"
             while True:
@@ -295,7 +295,7 @@ class ChessGame(tk.Tk):
                     break
                 try:
                     pType = {pType.__name__: pType for pType in self.board.promoteTo[self.selected.color]}[prompt.lower().capitalize()]
-                    self.board.movePiece(self.selected.vector, vector, promote=pType)
+                    self.board.movePiece(self.selected.vector, vector, promote=pType, checkMove=False)
                     break
                 except KeyError:
                     msg = prompt + "is Not a valid piece, must be any of \n" + "\n".join([pType.__name__ for pType in self.board.promoteTo[self.selected.color]])

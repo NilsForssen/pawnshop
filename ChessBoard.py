@@ -171,7 +171,7 @@ class Board():
                             try:
                                 testBoard.movePiece(alliedPos, move, ignoreMate=True,
                                                     checkForMate=False, promote=pieceType,
-                                                    printOut=False)
+                                                    printOut=False, checkMove=False)
                             except PromotionError:
                                 continue
                             else:
@@ -189,8 +189,8 @@ class Board():
                     self.checkmates[color] = True
 
     def movePiece(self, startVec, targetVec,
-                  ignoreMate=False, checkForCheck=True,
-                  checkForMate=True, printOut=True, *args, **kwargs):
+                  ignoreMate=False, ignoreCheck=False, checkForCheck=True,
+                  checkForMate=True, checkMove=True, printOut=True, *args, **kwargs):
 
         if self.isEmpty(startVec):
             raise EmptyError(startVec.getStr(self))
@@ -199,6 +199,12 @@ class Board():
 
         if self.checkmates[startPiece.color] and not ignoreMate:
             raise CheckMate
+
+        if checkMove:
+            if targetVec.matches(startPiece.getMoves(self, ignoreCheck=ignoreCheck, ignoreMate=ignoreMate)):
+                pass
+            else:
+                raise IllegalMove(startVec.getStr(self), targetVec.getStr(self))
 
         for move in self.moves[startPiece.color]:
             if move.pieceCondition(startPiece):

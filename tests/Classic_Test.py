@@ -16,7 +16,7 @@ print(board)
 
 
 def move(start, target, **kwargs):
-    print(board.movePiece(ChessVector(start, board), ChessVector(target, board), **kwargs))
+    board.movePiece(ChessVector(start, board), ChessVector(target, board), **kwargs)
 
 
 # print(board.movePiece((6,0), (5,0)))
@@ -41,7 +41,7 @@ try:
     # board.movePiece((6,5), (4,5))
     move("f2", "f4")
     raise UnsuccessfulTest
-except Check:
+except IllegalMove:
     print("Test Success")
 
 # print(board.movePiece((3,3), (1,2)))
@@ -51,14 +51,14 @@ try:
     # board.movePiece((4,7), (6,5))
     move("h4", "f2")
     raise UnsuccessfulTest
-except Check:
+except IllegalMove:
     print("Test Success")
 
 try:
     # board.movePiece((1,1), (2,1))
     move("b7", "b6")
     raise UnsuccessfulTest
-except Check:
+except IllegalMove:
     print("Test Success")
 
 # print(board.movePiece((0,4), (0,3)))
@@ -142,7 +142,7 @@ except IllegalMove:
 try:
     move("d8", "d7")
     raise UnsuccessfulTest
-except Check:
+except IllegalMove:
     print("Test Success")
 
 move("d8", "e7")
@@ -162,8 +162,3 @@ move("f7", "f8", promote=Queen)
 move("e8", "f8")
 
 print(board)
-
-# print(board.history)
-
-for p in board:
-    print(p, p.vector)

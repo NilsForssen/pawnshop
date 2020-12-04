@@ -1,3 +1,5 @@
+# Exceptions.py
+
 class Illegal(Exception):
     """Move is ilegal"""
     pass
@@ -7,11 +9,6 @@ class IllegalMove(Illegal):
     def __init__(self, startPos, targetPos,
                  msg="Piece at {0} cannot move to {1}!"):
         super().__init__(msg.format(startPos, targetPos))
-
-
-class Check(Illegal):
-    def __init__(self, msg="Your king is in check!"):
-        super().__init__(msg)
 
 
 class CheckMate(Illegal):

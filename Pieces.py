@@ -36,7 +36,7 @@ class Piece(ABC):
         """Returns standard destinations of piece in board"""
         raise NotImplementedError
 
-    def getMoves(self, board, ignoreCheck=False, useThreading=True):
+    def getMoves(self, board, ignoreCheck=False, ignoreMate=False):
         """Returns board-specific moves of piece in board"""
         destList = []
         for move in board.moves[self.color]:
@@ -48,7 +48,7 @@ class Piece(ABC):
 
             for dest in destList:
                 testBoard = deepcopy(board)
-                testBoard.movePiece(self.vector, dest, checkForMate=False, printOut=False, promote=Queen)
+                testBoard.movePiece(self.vector, dest, ignoreMate=ignoreMate, checkForMate=False, printOut=False, checkMove=False, promote=Queen)
                 if testBoard.checks[self.color]:
                     remove.append(dest)
 
