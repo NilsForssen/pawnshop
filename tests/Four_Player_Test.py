@@ -5,14 +5,14 @@ if __name__ == '__main__' and __package__ is None:
     sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 
 from ChessBoard import init4P
-from Utils import toChessPosition
+from ChessVector import ChessVector
 
 
 board = init4P()
 
 
 def move(start, target, **kwargs):
-    print(board.movePiece(toChessPosition(start, board), toChessPosition(target, board), **kwargs))
+    board.movePiece(ChessVector(start, board), ChessVector(target, board), **kwargs)
 
 
 move("f2", "f3")
