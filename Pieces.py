@@ -105,6 +105,9 @@ class Piece(ABC):
 
 
 class Pawn(Piece):
+
+    notation = ""
+
     def __init__(self, color, direction="up", rank=2):
         super().__init__(color, 1, "P")
 
@@ -153,6 +156,9 @@ class Pawn(Piece):
 
 
 class Rook(Piece):
+
+    notation = "R"
+
     def __init__(self, color):
         super().__init__(color, 5, "R")
 
@@ -165,6 +171,9 @@ class Rook(Piece):
 
 
 class Knight(Piece):
+
+    notation = "N"
+
     def __init__(self, color):
         super().__init__(color, 3, "N")
 
@@ -190,6 +199,9 @@ class Knight(Piece):
 
 
 class Bishop(Piece):
+
+    notation = "B"
+
     def __init__(self, color):
         super().__init__(color, 3, "B")
 
@@ -201,6 +213,9 @@ class Bishop(Piece):
 
 
 class King(Piece):
+
+    notation = "K"
+
     def __init__(self, color):
         super().__init__(color, int(1e10), "K")
 
@@ -214,6 +229,9 @@ class King(Piece):
 
 
 class Queen(Piece):
+
+    notation = "Q"
+
     def __init__(self, color):
         super().__init__(color, 9, "Q")
 
