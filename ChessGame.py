@@ -9,7 +9,7 @@ from ChessBoard import initClassic, init4P
 from Pieces import Piece, Empty, Disabled
 from Utils import getResourcePath, fetchImage
 from ChessVector import ChessVector
-from Exceptions import PromotionError, Illegal, DisabledError
+from Exceptions import PromotionError, DisabledError
 from GameNotations import *
 
 
@@ -92,9 +92,6 @@ class ChessGame(tk.Tk):
         self.square = 64
         self.blackbarTop, self.blackbarBottom, self.blackbarLeft, self.blackbarRight = 0, 0, 0, 0
 
-        # Generate board and pieceimages
-        self.createBoard()
-
         # Variables
         self.historyString = tk.StringVar(self)
         self.evalString = tk.StringVar(self)
@@ -150,10 +147,15 @@ class ChessGame(tk.Tk):
         self.boardCanv.bind("<Configure>", self.resize)
         self.boardCanv.bind("<Button-1>", self.chessInteract)
 
+        # Generate board and pieceimages
+        self.drawBoard()
+
         # Mainloop
         self.mainloop()
 
-    def createBoard(self):
+    def drawBoard(self):
+        self.selected = None
+        self.boardCanv.delete("all")
         self.squares = {}
         self.images = {}
 
@@ -172,27 +174,19 @@ class ChessGame(tk.Tk):
                 if not isinstance(piece, Empty):
                     self.getImage(piece)
 
+        self.updateGraphics()
+
     def importPGN(self):
-        try:
-            with filedialog.askopenfile(title="Open PGN file", filetypes=[("PGN file", ".pgn"), ("Text file", ".txt")]) as file:
-                moves = PGN2Board(file.load())
+        with filedialog.askopenfile(title="Open PGN file", filetypes=[("PGN file", ".pgn"), ("Text file", ".txt")]) as file:
+            self.board = PGN2Board(file.read())
 
-            self.reInitBoard()
-            for move in moves:
-                try:
-                    self.board.movePiece(*move)
-                except Illegal:
-                    raise ValueError("PGN not valid") from None
-
-        except AttributeError:
-            print("Closed dialog")
+            self.turnorder = self.board.turnorder
+            self.currentTurn = self.turnorder[len(self.board.history) % 2 == 1]
+            self.drawBoard()
 
     def exportPGN(self):
-        try:
-            with filedialog.asksaveasfile(title="Save PGN file", filetypes=[("PGN file", ".pgn")]) as file:
-                file.write(history2PGN(self.board.history, players=2))
-        except AttributeError:
-            print("Closed dialog")
+        with filedialog.asksaveasfile(title="Save PGN file", defaultextension=".pgn", filetypes=[("PGN file", ".pgn")]) as file:
+            file.write(board2PGN(self.board, players=2))
 
     def exportFEN(self):
         self.clipboard_append(board2FEN(self.board))
@@ -206,13 +200,10 @@ class ChessGame(tk.Tk):
         if boardType is not None:
             self.currentBoard = boardType
         self.board = self.boardInits[self.currentBoard]()
-        self.selected = None
         self.turnorder = self.board.turnorder
         self.currentTurn = self.turnorder[0]
         self.resize()
-        self.boardCanv.delete("all")
-        self.createBoard()
-        self.updateGraphics()
+        self.drawBoard()
 
     def getImage(self, piece):
         """Get image of given piece"""
