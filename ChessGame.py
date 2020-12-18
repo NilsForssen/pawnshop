@@ -194,7 +194,10 @@ class ChessGame(tk.Tk):
 
     def importFEN(self):
         FEN = simpledialog.askstring("Load FEN!", "Enter a FEN string to load into the board.")
-        self.reInitBoard(board=FEN2Board(FEN))
+        self.board = FEN2Board(FEN)
+        self.turnorder = self.board.turnorder
+        self.currentTurn = self.turnorder[0]
+        self.drawBoard()
 
     def reInitBoard(self, boardType=None):
         if boardType is not None:

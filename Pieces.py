@@ -21,7 +21,7 @@ _directions = {key: [ChessVector(offset) for offset in _directions[key]] for key
 
 
 class Piece(ABC):
-    def __init__(self, color, value, symbol):
+    def __init__(self, color, value, symbol, *args, **kwargs):
         self.vector = None
         self.color = color
         self.value = value
@@ -105,10 +105,7 @@ class Piece(ABC):
 
 
 class Pawn(Piece):
-
-    notation = ""
-
-    def __init__(self, color, direction="up", rank=2):
+    def __init__(self, color, direction="up", rank=2, *args, **kwargs):
         super().__init__(color, 1, "P")
 
         self.passed = False
@@ -156,10 +153,7 @@ class Pawn(Piece):
 
 
 class Rook(Piece):
-
-    notation = "R"
-
-    def __init__(self, color):
+    def __init__(self, color, *args, **kwargs):
         super().__init__(color, 5, "R")
 
     def getStandardMoves(self, board):
@@ -171,10 +165,7 @@ class Rook(Piece):
 
 
 class Knight(Piece):
-
-    notation = "N"
-
-    def __init__(self, color):
+    def __init__(self, color, *args, **kwargs):
         super().__init__(color, 3, "N")
 
     def getStandardMoves(self, board):
@@ -199,10 +190,7 @@ class Knight(Piece):
 
 
 class Bishop(Piece):
-
-    notation = "B"
-
-    def __init__(self, color):
+    def __init__(self, color, *args, **kwargs):
         super().__init__(color, 3, "B")
 
     def getStandardMoves(self, board):
@@ -213,10 +201,7 @@ class Bishop(Piece):
 
 
 class King(Piece):
-
-    notation = "K"
-
-    def __init__(self, color):
+    def __init__(self, color, *args, **kwargs):
         super().__init__(color, int(1e10), "K")
 
     def getStandardMoves(self, board):
@@ -229,10 +214,7 @@ class King(Piece):
 
 
 class Queen(Piece):
-
-    notation = "Q"
-
-    def __init__(self, color):
+    def __init__(self, color, *args, **kwargs):
         super().__init__(color, 9, "Q")
 
     def getStandardMoves(self, board):
@@ -244,7 +226,7 @@ class Queen(Piece):
 
 
 class Disabled():
-    def __init__(self, vector):
+    def __init__(self, vector, *args, **kwargs):
         self.vector = vector
 
     def __str__(self):
@@ -255,7 +237,7 @@ class Disabled():
 
 
 class Empty():
-    def __init__(self, vector):
+    def __init__(self, vector, *args, **kwargs):
         self.vector = vector
 
     def __str__(self):
@@ -264,6 +246,15 @@ class Empty():
     def move(self, vec):
         self.vector = vec
 
+
+pieceNotations = {
+    "P": Pawn,
+    "N": Knight,
+    "B": Bishop,
+    "R": Rook,
+    "Q": Queen,
+    "K": King
+}
 
 if __name__ == "__main__":
 

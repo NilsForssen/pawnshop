@@ -1,4 +1,5 @@
-# GmaNotations.py
+# GameNotations.py
+
 import re
 from copy import deepcopy
 from ChessBoard import initClassic, Board
@@ -47,7 +48,6 @@ def board2PGN(board, **tags):
 
 def PGN2Board(PGNString):
     notations = re.finditer(r"\s*(?P<castleQ>O-O-O)|(?P<castleK>O-O)|(?P<piece>[A-Z]*)(?P<pcol>[a-h]?)(?P<capture>[x]?)(?P<col>[a-h]+)(?P<rank>\d+)=?(?P<promote>[A-Z]?)\+*\#?", PGNString)
-    pTypes = dict(zip(map(lambda pt: pt.notation, [Pawn, Rook, Knight, Bishop, King, Queen]), [Pawn, Rook, Knight, Bishop, King, Queen]))
 
     board = initClassic()
     for i, notation in enumerate(notations):
@@ -65,10 +65,10 @@ def PGN2Board(PGNString):
             for piece in board.pieces[color]:
                 vector = ChessVector(notation.group("col") + notation.group("rank"), board)
                 if vector.matches(piece.getMoves(board)):
-                    pType = pTypes[notation.group("piece")]
+                    pType = pieceNotations[notation.group("piece")]
                     if isinstance(piece, pType):
                         if notation.group("pcol") == "" or notation.group("pcol") == toAlpha(piece.vector.col):
-                            board.movePiece(piece.vector, vector, checkMove=False, promote=pTypes[notation.group("promote")], ignoreMate=True, checkForCheck=False, printOut=False)
+                            board.movePiece(piece.vector, vector, checkMove=False, promote=pieceNotations[notation.group("promote")], ignoreMate=True, checkForCheck=False, printOut=False)
                             break
                         else:
                             continue
@@ -82,11 +82,57 @@ def PGN2Board(PGNString):
 def FEN2Board(FENString):
     board = Board()
     config = deepcopy(ClassicConfig.CONFIG)
+    del config["pieces"]
     board.setup(config)
+
+    fieldFinder = re.finditer(r"[^ ]+", FENString)
+    rowFinder = re.finditer(r"([^/]+)", next(fieldFinder).group())
+
+    for rowi, row in enumerate(rowFinder):
+        coli = 0
+        for chari, char in enumerate(row.group(0)):
+            if char.isnumeric():
+                for coli in range(coli, coli + int(char)):
+                    vector = ChessVector((rowi, coli), board)
+                    board[vector] = Empty(vector)
+                    coli += 1
+            else:
+                vector = ChessVector((rowi, coli), board)
+
+                if char.isupper():
+                    board[vector] = pieceNotations[char]("white", direction="up")
+                elif char.islower():
+                    board[vector] = pieceNotations[char.upper()]("black", direction="down")
+                coli += 1
+
+    # No other fields are critical, might implement more later
+    return board
 
 
 def board2FEN(board):
-    pass
+    FENString = ""
+    for rowi, row in enumerate(board._board):
+        empty = 0
+        for coli, piece in enumerate(row):
+            if isinstance(piece, Empty) or isinstance(piece, Disabled):
+                empty += 1
+            else:
+                if empty:
+                    FENString += str(empty)
+                if piece.color == "white":
+                    ps = piece.symbol.upper()
+                elif piece.color == "black":
+                    ps = piece.symbol.lower()
+                FENString += ps
+                empty = 0
+
+        if empty:
+            FENString += str(empty)
+        if not rowi == board.rows - 1: FENString += "/"
+
+    #     for Emtpy
+    print(FENString)
+    return FENString
 
 
 def readable(historyList, players=2):
