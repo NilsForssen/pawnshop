@@ -11,6 +11,7 @@ from Pieces import *
 class Board():
     def __init__(self):
         self._board = []
+        self.ready = False
 
     def __iter__(self):
         """
@@ -130,6 +131,8 @@ class Board():
         self.history = []
 
         self.checkForCheck()
+
+        self.ready = True
 
     def swapPositions(self, vec1, vec2):
         self._board[vec1.row][vec1.col].move(vec2)
