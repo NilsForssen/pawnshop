@@ -35,6 +35,11 @@ class UnsuccessfulTest(Exception):
     pass
 
 
+class TurnError(Exception):
+    def __init__(self, msg="Wrong player!"):
+        super().__init__(msg)
+
+
 if __name__ == "__main__":
 
     # Do some testing

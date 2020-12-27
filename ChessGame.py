@@ -83,8 +83,6 @@ class ChessGame(tk.Tk):
         }
         self.currentBoard = "Classic"
         self.board = self.boardInits[self.currentBoard]()
-        self.turnorder = self.board.turnorder
-        self.currentTurn = self.turnorder[0]
         self.kingsInCheck = []
         self.mated = False
         self.selected = None
@@ -179,9 +177,6 @@ class ChessGame(tk.Tk):
     def importPGN(self):
         with filedialog.askopenfile(title="Open PGN file", filetypes=[("PGN file", ".pgn"), ("Text file", ".txt")]) as file:
             self.board = PGN2Board(file.read())
-
-            self.turnorder = self.board.turnorder
-            self.currentTurn = self.turnorder[len(self.board.history) % 2 == 1]
             self.drawBoard()
 
     def exportPGN(self):
@@ -195,16 +190,12 @@ class ChessGame(tk.Tk):
     def importFEN(self):
         FEN = simpledialog.askstring("Load FEN!", "Enter a FEN string to load into the board.")
         self.board = FEN2Board(FEN)
-        self.turnorder = self.board.turnorder
-        self.currentTurn = self.turnorder[0]
         self.drawBoard()
 
     def reInitBoard(self, boardType=None):
         if boardType is not None:
             self.currentBoard = boardType
         self.board = self.boardInits[self.currentBoard]()
-        self.turnorder = self.board.turnorder
-        self.currentTurn = self.turnorder[0]
         self.resize()
         self.drawBoard()
 
@@ -222,7 +213,8 @@ class ChessGame(tk.Tk):
         return img
 
     def chessInteract(self, event, *args):
-        if self.mated and self.board.ready:
+        print(self.mated)
+        if not self.mated and self.board.ready:
             if event.x + self.blackbarRight < self.boardCanv.winfo_width() and event.x - self.blackbarLeft > 0 and event.y + self.blackbarBottom < self.boardCanv.winfo_height() and event.y - self.blackbarTop > 0:
                 vec = ChessVector((int((event.y - self.blackbarTop) / self.square), int((event.x - self.blackbarRight) / self.square)))
 
@@ -253,12 +245,12 @@ class ChessGame(tk.Tk):
                         elif vec == self.selected.vector:
                             self.clearHighlights()
                         else:
-                            if isinstance(piece, Piece) and piece.color == self.currentTurn:
+                            if isinstance(piece, Piece) and piece.color == self.board.currentTurn:
                                 self.select(piece, highlights=piece.getMoves(self.board))
                             else:
                                 self.clearHighlights()
                     else:
-                        if isinstance(piece, Piece) and piece.color == self.currentTurn:
+                        if isinstance(piece, Piece) and piece.color == self.board.currentTurn:
                             self.select(piece, highlights=piece.getMoves(self.board))
                         else:
                             self.clearHighlights()
@@ -298,7 +290,6 @@ class ChessGame(tk.Tk):
                     msg = prompt + "is Not a valid piece, must be any of \n" + "\n".join([pType.__name__ for pType in self.board.promoteTo[self.selected.color]])
                     continue
 
-        self.advanceTurn()
         self.updateGraphics()
 
     def select(self, piece, highlights=None):
@@ -306,13 +297,6 @@ class ChessGame(tk.Tk):
         self.selected = piece
         self.boardCanv.itemconfigure(self.squares[piece.vector.tuple()], fill="light goldenrod")
         self.highlight(highlights)
-
-    def advanceTurn(self):
-        idx = self.turnorder.index(self.currentTurn)
-        try:
-            self.currentTurn = self.turnorder[idx + 1]
-        except IndexError:
-            self.currentTurn = self.turnorder[0]
 
     def clearHighlights(self):
         self.selected = None

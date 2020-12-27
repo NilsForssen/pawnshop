@@ -116,6 +116,8 @@ class Board():
             self.promoteAt = config.get("promoteAt") or dConfig.get("promteAt")
             self.turnorder = config.get("turnorder") or dConfig.get("turnorder")
 
+            self.currentTurn = self.turnorder[0]
+
             self._board = [[Empty(ChessVector((row, col))) for col in range(self.cols)] for row in range(self.rows)]
 
             for color, pieceList in self.pieces.items():
@@ -191,14 +193,27 @@ class Board():
                 else:
                     self.checkmates[color] = True
 
+    def advanceTurn(self):
+        newidx = self.turnorder.index(self.currentTurn) + 1
+        try:
+            self.currentTurn = self.turnorder[newidx]
+        except IndexError:
+            self.currentTurn = self.turnorder[0]
+
     def movePiece(self, startVec, targetVec,
-                  ignoreMate=False, ignoreCheck=False, checkForCheck=True,
-                  checkForMate=True, checkMove=True, printOut=True, *args, **kwargs):
+                  ignoreOrder=False, ignoreMate=False, ignoreCheck=False,
+                  checkForCheck=True, checkForMate=True, checkMove=True,
+                  printOut=True, *args, **kwargs):
 
         if self.isEmpty(startVec):
             raise EmptyError(startVec.getStr(self))
 
         startPiece = self[startVec]
+
+        if not ignoreOrder and self.currentTurn != startPiece.color:
+            raise TurnError
+        else:
+            self.advanceTurn()
 
         if self.checkmates[startPiece.color] and not ignoreMate:
             raise CheckMate
