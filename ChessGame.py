@@ -86,7 +86,7 @@ class ChessGame(tk.Tk):
         self.turnorder = self.board.turnorder
         self.currentTurn = self.turnorder[0]
         self.kingsInCheck = []
-        self.running = True
+        self.mated = False
         self.selected = None
 
         self.square = 64
@@ -222,7 +222,7 @@ class ChessGame(tk.Tk):
         return img
 
     def chessInteract(self, event, *args):
-        if self.running:
+        if self.mated and self.board.ready:
             if event.x + self.blackbarRight < self.boardCanv.winfo_width() and event.x - self.blackbarLeft > 0 and event.y + self.blackbarBottom < self.boardCanv.winfo_height() and event.y - self.blackbarTop > 0:
                 vec = ChessVector((int((event.y - self.blackbarTop) / self.square), int((event.x - self.blackbarRight) / self.square)))
 
@@ -275,8 +275,11 @@ class ChessGame(tk.Tk):
                                     break
                             else:
                                 messagebox.showinfo("Checkmate!", f"{[color for color, value in self.board.checkmates.items() if value].pop()} has been checkmated!")
-                                self.running = False
+                                self.mated = True
                                 break
+
+        elif not self.board.ready:
+            print("Board is not ready yet.")
 
     def moveSelected(self, vector):
         try:
