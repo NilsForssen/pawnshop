@@ -176,7 +176,7 @@ class Board():
                             try:
                                 testBoard.movePiece(alliedPos, move, ignoreMate=True,
                                                     checkForMate=False, promote=pieceType,
-                                                    printOut=False, checkMove=False)
+                                                    printOut=False, checkMove=False, ignoreOrder=True)
                             except PromotionError:
                                 continue
                             else:

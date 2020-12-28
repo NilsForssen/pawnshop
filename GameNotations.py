@@ -56,7 +56,7 @@ def PGN2Board(PGNString):
             for king in board.kings[color]:
                 for move in board.moves[color]:
                     if ((not notation.group("castleK") is None) and move is CastleK) or ((not notation.group("castleQ") is None) and move is CastleQ):
-                        board.movePiece(king.vector, move.getDestinations(king, board).pop(), checkMove=False, ignoreMate=True, checkForCheck=False, printOut=False)
+                        board.movePiece(king.vector, move.getDestinations(king, board).pop(), checkMove=False, ignoreMate=True, checkForCheck=False, printOut=False, ignoreOrder=True)
                         break
                 else:
                     continue
@@ -68,7 +68,7 @@ def PGN2Board(PGNString):
                     pType = pieceNotations[notation.group("piece")]
                     if isinstance(piece, pType):
                         if notation.group("pcol") == "" or notation.group("pcol") == toAlpha(piece.vector.col):
-                            board.movePiece(piece.vector, vector, checkMove=False, promote=pieceNotations[notation.group("promote")], ignoreMate=True, checkForCheck=False, printOut=False)
+                            board.movePiece(piece.vector, vector, checkMove=False, promote=pieceNotations[notation.group("promote")], ignoreMate=True, checkForCheck=False, printOut=False, ignoreOrder=True)
                             break
                         else:
                             continue
@@ -128,7 +128,8 @@ def board2FEN(board):
 
         if empty:
             FENString += str(empty)
-        if not rowi == board.rows - 1: FENString += "/"
+        if not rowi == board.rows - 1:
+            FENString += "/"
 
     #     for Emtpy
     print(FENString)
