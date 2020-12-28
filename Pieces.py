@@ -48,7 +48,7 @@ class Piece(ABC):
 
             for dest in destList:
                 testBoard = deepcopy(board)
-                testBoard.movePiece(self.vector, dest, ignoreMate=ignoreMate, checkForMate=False, printOut=False, checkMove=False, promote=Queen)
+                testBoard.movePiece(self.vector, dest, ignoreMate=ignoreMate, checkForMate=False, printOut=False, checkMove=False, promote=Queen, ignoreOrder=True)
                 if testBoard.checks[self.color]:
                     remove.append(dest)
 
