@@ -1,16 +1,77 @@
 # ChessGame.py
 
 import tkinter as tk
+import _thread
+import pickle
+import socket
 import webbrowser
 from tkinter import simpledialog, filedialog, messagebox
 from tkinter.font import Font
-from PIL import ImageTk
-from ChessBoard import initClassic, init4P
+from PIL import Image, ImageTk
+from ChessBoard import initClassic, init4P, initEmpty, Board
 from Pieces import Piece, Empty, Disabled
 from Utils import getResourcePath, fetchImage
 from ChessVector import ChessVector
-from Exceptions import PromotionError, DisabledError
+from Exceptions import PromotionError, DisabledError, Illegal
 from GameNotations import *
+from Network import Network
+from socket import gaierror
+
+
+class LoadingDialog(tk.Toplevel):
+    def __init__(self, master, txt, GIFPath=getResourcePath(__file__, "Sprites/LoadingGIF.gif")):
+        super().__init__(master, bg="white")
+        self._master = master
+        self._txt = txt
+        self.update_idletasks()
+        self.geometry(f"+{master.winfo_x() + 100}+{master.winfo_y() + 100}")
+        self.minsize(300, 200)
+        self.resizable(False, False)
+
+        gif = Image.open(GIFPath)
+        self._frames = []
+        for i in range(0, gif.n_frames):
+            gif.seek(i)
+            self._frames.append(ImageTk.PhotoImage(gif.resize((100, 100), Image.ANTIALIAS)))
+
+        self.txtLabel = tk.Label(self, text=self._txt, bg="white", font=("Segoe", 13))
+        self.imgLabel = tk.Label(self, image=self._frames[0], bg="white")
+        self.cancelButton = tk.Button(self, text="Cancel", font=("Segoe", 13), command=self.close)
+        self.cancelButton.focus()
+        self.txtLabel.pack(padx=10, pady=10)
+        self.imgLabel.pack(padx=10)
+        self.cancelButton.pack(padx=10, pady=10)
+
+        self.title("loading")
+
+        self.protocol("WM_DELETE_WINDOW", self.close)
+
+    @property
+    def text(self):
+        return self._txt
+
+    @text.setter
+    def text(self, text):
+        self._txt = text
+        self.txtLabel.configure(text=self._txt)
+
+    def start(self):
+        self.grab_set()
+        self.startLoad()
+        self._master.wait_window(self)
+
+    def startLoad(self, i=0):
+        if i == len(self._frames):
+            i = 0
+        self.imgLabel.configure(image=self._frames[i])
+        self._ID = self.after(50, lambda: self.startLoad(i + 1))
+
+    def stopLoad(self):
+        self.after_cancel(self._ID)
+
+    def close(self):
+        self.stopLoad()
+        self.destroy()
 
 
 IMAGEDIR = getResourcePath(__file__, "Sprites\\")
@@ -78,10 +139,11 @@ class ChessGame(tk.Tk):
 
         # Chesscanvas related
         self.boardInits = {
+            "Empty": initEmpty,
             "Classic": initClassic,
             "4P": init4P
         }
-        self.currentBoard = "Classic"
+        self.currentBoard = "Empty"
         self.board = self.boardInits[self.currentBoard]()
         self.kingsInCheck = []
         self.mated = False
@@ -89,6 +151,12 @@ class ChessGame(tk.Tk):
 
         self.square = 64
         self.blackbarTop, self.blackbarBottom, self.blackbarLeft, self.blackbarRight = 0, 0, 0, 0
+        # Online
+        self.inConnections = []
+        self.connection = None
+        self.clientColor = None
+        self.loadDialog = None
+        self.pollingRate = 500
 
         # Variables
         self.historyString = tk.StringVar(self)
@@ -132,8 +200,9 @@ class ChessGame(tk.Tk):
         self.gameMenu.add_separator()
         self.gameMenu.add_command(label="Exit", command=lambda: self.destroy())
 
-        self.onlineMenu.add_command(label="Host game")
-        self.onlineMenu.add_command(label="Join game")
+        self.onlineMenu.add_command(label="Host game", command=self.hostGame)
+        self.onlineMenu.add_command(label="Join game", command=self.joinGame)
+        self.onlineMenu.add_command(label="Disconnect", command=self.disconnect, state="disabled")
 
         self.menuBar.add_cascade(label="Game", menu=self.gameMenu)
         self.menuBar.add_cascade(label="Online", menu=self.onlineMenu)
@@ -147,6 +216,9 @@ class ChessGame(tk.Tk):
 
         # Generate board and pieceimages
         self.drawBoard()
+
+        # Set icon
+        self.iconphoto(True, ImageTk.PhotoImage(Image.open(IMAGEDIR + "King.ico")))
 
         # Mainloop
         self.mainloop()
@@ -174,21 +246,202 @@ class ChessGame(tk.Tk):
 
         self.updateGraphics()
 
-    def importPGN(self):
-        with filedialog.askopenfile(title="Open PGN file", filetypes=[("PGN file", ".pgn"), ("Text file", ".txt")]) as file:
-            self.board = PGN2Board(file.read())
+    def _waitForConn(self):
+        self._waitID = self.after(self.pollingRate, self._waitForConn)
+
+    def _client(self, conn, addr, color):
+        MANDATORYFLAGS = {
+            "ignoreOrder": False,
+            "ignoreMate": False,
+            "ignoreCheck": False,
+            "checkForCheck": True,
+            "checkForMate": True,
+            "checkMove": True,
+            "printOut": False
+        }
+        conn.send(pickle.dumps(color))
+        while True:
+            try:
+                data = pickle.loads(conn.recv(1024))
+            except EOFError as e:
+                print(e)
+                conn.close()
+                self.disconnect()
+                simpledialog.messagebox.showinfo("Lost connection", "Opponent disconnected from game server!")
+                break
+            except ConnectionAbortedError as e:
+                print(e)
+                break
+
+            if data == "break":
+                conn.close()
+                self.disconnect()
+                break
+            elif data != "get":
+                # Data is of format (args, kwargs)
+                args, kwargs = data
+
+                if color == self.board.currentTurn == color:
+                    try:
+                        self.board.movePiece(*args, **{**kwargs, **MANDATORYFLAGS})
+                    except PromotionError:
+                        conn.send(pickle.dumps("promote"))
+                        continue
+                    except Illegal:
+                        conn.send(pickle.dumps("illegal"))
+                        continue
+
+            conn.send(pickle.dumps(self.board))
+
+        print("Disconnected from ", addr)
+
+    def _server(self):
+        server = "0.0.0.0"
+        port = 5555
+        self.mySocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.mySocket.bind((server, port))
+        self.mySocket.listen()
+        print("Waiting for opponent...")
+
+        try:
+            conn, addr = self.mySocket.accept()
+        except OSError:
+            print("Stopped waiting for opponents")
+        else:
+            self.inConnections.append(conn)
+            self.reInitBoard("Classic")
+            self.loadDialog.close()
+            self.after_cancel(self._waitID)
+            self._updateID = self.after(self.pollingRate, self._updateVisuals)
+            self.onlineMenu.entryconfig("Disconnect", state="normal")
+            self.clientColor = "white"
+            self._client(conn, addr, "black")
+
+    def hostGame(self):
+        if self.connection is not None:
+            self.disconnect()
+
+        _thread.start_new_thread(self._server, ())
+
+        self.reInitBoard("Empty")
+        self.loadDialog = LoadingDialog(self, txt=f"Waiting for other player to connect, \n your global IP-addres is 127.0.0.1")
+        self.loadDialog.start()
+        self._waitID = self.after(self.pollingRate, lambda: self._checkLoadCancel(loop=True))
+
+    def _updateVisuals(self):
+        self.updateGraphics()
+        self._updateID = self.after(self.pollingRate, self._updateVisuals)
+
+    def _checkLoadCancel(self, loop=False):
+        if self.loadDialog.winfo_exists():
+            if loop:
+                self.after(self.pollingRate, lambda: self._checkLoadCancel(loop=True))
+            return True
+        else:
+            self.disconnect()
+            del self.loadDialog
+            return False
+
+    def joinGame(self):
+        if self.connection is not None:
+            self.disconnect()
+        ip = simpledialog.askstring("IP-adress", "IP-adress of host?")
+        if not ip:
+            return
+        self.connection = Network()
+        try:
+            self.clientColor = self.connection.connect(ip)
+        except (gaierror, ConnectionRefusedError):
+            simpledialog.messagebox.showinfo("Could not Connect", f"Could not connect to \"{ip}\"!")
+            return
+        if not self._waitForGame():
+            self.reInitBoard("Empty")
+            self.loadDialog = LoadingDialog(self, txt="Waiting for opponent\n to connect!")
+            self.loadDialog.start()
+
+    def _waitForGame(self):
+        echo = self.connection.send("get")
+
+        if isinstance(echo, Board):
+            try:
+                self.loadDialog.close()
+                del self.loadDialog
+            except AttributeError:
+                pass
+
+            self.onlineMenu.entryconfig("Disconnect", state="normal")
+            self.board = echo
             self.drawBoard()
+            self._updateID = self.after(self.pollingRate, self._updateBoard)
+            return True
+        else:
+            if not self._checkLoadCancel():
+                return False
+            self._waitID = self.after(self.pollingRate, self._waitForGame)
+            return False
+
+    def _updateBoard(self):
+        try:
+            newBoard = self.connection.send("get")
+        except ConnectionResetError:
+            self.disconnect()
+            simpledialog.messagebox.showinfo("Lost connection", "Lost connection to server!")
+            return
+        if newBoard is None:
+            self.disconnect()
+            simpledialog.messagebox.showinfo("Lost connection", "Opponent disconnected from game server!")
+        else:
+            if newBoard != self.board:
+                self.board = newBoard
+                self.clearHighlights()
+                self.updateGraphics()
+
+            self._updateID = self.after(self.pollingRate, self._updateBoard)
+
+    def disconnect(self):
+        try:
+            self.after_cancel(self._waitID)
+        except Exception:
+            pass
+        try:
+            self.after_cancel(self._updateID)
+        except Exception:
+            pass
+
+        self.onlineMenu.entryconfig("Disconnect", state="disabled")
+        for conn in self.inConnections:
+            conn.close()
+        try:
+            self.connection.close()
+        except AttributeError:
+            pass
+        try:
+            self.mySocket.close()
+        except AttributeError:
+            pass
+        self.connection = None
+        self.clientColor = None
+        self.reInitBoard("Empty")
+
+    def importPGN(self):
+        file = filedialog.askopenfile(title="Open PGN file", filetypes=[("PGN file", ".pgn"), ("Text file", ".txt")])
+        if file is None:
+            return
+        self.board = PGN2Board(file.read())
+        self.drawBoard()
 
     def exportPGN(self):
-        with filedialog.asksaveasfile(title="Save PGN file", defaultextension=".pgn", filetypes=[("PGN file", ".pgn")]) as file:
-            file.write(board2PGN(self.board, players=2))
+        file = filedialog.asksaveasfile(title="Save PGN file", defaultextension=".pgn", filetypes=[("PGN file", ".pgn")])
+        if file is None:
+            return
+        file.write(board2PGN(self.board, players=2))
 
     def exportFEN(self):
         self.clipboard_append(board2FEN(self.board))
         simpledialog.messagebox.showinfo("FEN Copied!", "FEN-string has been copied to clipboard!")
 
     def importFEN(self):
-        FEN = simpledialog.askstring("Load FEN!", "Enter a FEN string to load into the board.")
+        FEN = StringDialog.askstring("Load FEN!", "Enter a FEN string to load into the board.")
         self.board = FEN2Board(FEN)
         self.drawBoard()
 
@@ -213,7 +466,6 @@ class ChessGame(tk.Tk):
         return img
 
     def chessInteract(self, event, *args):
-        print(self.mated)
         if not self.mated and self.board.ready:
             if event.x + self.blackbarRight < self.boardCanv.winfo_width() and event.x - self.blackbarLeft > 0 and event.y + self.blackbarBottom < self.boardCanv.winfo_height() and event.y - self.blackbarTop > 0:
                 vec = ChessVector((int((event.y - self.blackbarTop) / self.square), int((event.x - self.blackbarRight) / self.square)))
@@ -223,37 +475,15 @@ class ChessGame(tk.Tk):
                 except DisabledError:
                     pass
                 else:
-                    if self.selected is not None:
-                        moves = self.selected.getMoves(self.board)
-                        if vec.matches(moves):
-                            self.moveSelected(vec)
+                    if self.selected is not None and vec.matches(self.selected.getMoves(self.board)):
+                        self.moveSelected(vec)
 
-                            if any(self.board.checks.values()):
-                                for color in [col for col, value in self.board.checks.items() if value]:
-                                    for king in self.board.kings[color]:
-                                        if self.board.isThreatened(king.vector, color):
-                                            if king not in self.kingsInCheck:
-                                                self.kingsInCheck.append(king)
-                                        else:
-                                            if king in self.kingsInCheck:
-                                                self.kingsInCheck.remove(king)
-                            else:
-                                self.kingsInCheck = []
+                        self.clearHighlights()
 
-                            self.clearHighlights()
-
-                        elif vec == self.selected.vector:
-                            self.clearHighlights()
-                        else:
-                            if isinstance(piece, Piece) and piece.color == self.board.currentTurn:
-                                self.select(piece, highlights=piece.getMoves(self.board))
-                            else:
-                                self.clearHighlights()
+                    elif isinstance(piece, Piece) and piece.color == self.board.currentTurn and (self.clientColor is None or self.clientColor == piece.color):
+                        self.select(piece, highlights=piece.getMoves(self.board))
                     else:
-                        if isinstance(piece, Piece) and piece.color == self.board.currentTurn:
-                            self.select(piece, highlights=piece.getMoves(self.board))
-                        else:
-                            self.clearHighlights()
+                        self.clearHighlights()
 
                     if any(self.board.checkmates.values()):
                         while True:
@@ -273,22 +503,32 @@ class ChessGame(tk.Tk):
         elif not self.board.ready:
             print("Board is not ready yet.")
 
-    def moveSelected(self, vector):
+    def moveSelected(self, vector, *args, **kwargs):
         try:
-            self.board.movePiece(self.selected.vector, vector, checkMove=False)
+            if self.connection is not None:
+                echo = self.connection.send(((self.selected.vector, vector, *args), kwargs))
+                if isinstance(echo, Board):
+                    self.board = echo
+                elif echo == "promote":
+                    raise PromotionError
+                else:
+                    print("something went wrong")
+            else:
+                self.board.movePiece(self.selected.vector, vector, *args, checkMove=False, **kwargs)
         except PromotionError:
             msg = "What do you want the pawn to promote to?"
             while True:
-                prompt = simpledialog.askstring("Promote!", msg)
+                prompt = StringDialog.askstring("Promote!", msg)
                 if prompt is None:
                     break
                 try:
                     pType = {pType.__name__: pType for pType in self.board.promoteTo[self.selected.color]}[prompt.lower().capitalize()]
-                    self.board.movePiece(self.selected.vector, vector, promote=pType, checkMove=False)
-                    break
                 except KeyError:
                     msg = prompt + "is Not a valid piece, must be any of \n" + "\n".join([pType.__name__ for pType in self.board.promoteTo[self.selected.color]])
                     continue
+                else:
+                    self.moveSelected(vector, promote=pType)
+                    break
 
         self.updateGraphics()
 
@@ -297,6 +537,22 @@ class ChessGame(tk.Tk):
         self.selected = piece
         self.boardCanv.itemconfigure(self.squares[piece.vector.tuple()], fill="light goldenrod")
         self.highlight(highlights)
+
+    def highlightKings(self):
+        if any(self.board.checks.values()):
+            for color in [col for col, value in self.board.checks.items() if value]:
+                for king in self.board.kings[color]:
+                    if self.board.isThreatened(king.vector, color):
+                        if king not in self.kingsInCheck:
+                            self.kingsInCheck.append(king)
+                    else:
+                        if king in self.kingsInCheck:
+                            self.kingsInCheck.remove(king)
+        else:
+            self.kingsInCheck = []
+
+        for king in self.kingsInCheck:
+            self.boardCanv.itemconfigure(self.squares[king.vector.tuple()], fill="red")
 
     def clearHighlights(self):
         self.selected = None
@@ -307,14 +563,14 @@ class ChessGame(tk.Tk):
                 if self.boardCanv.itemcget(square, "fill") != color:
                     self.boardCanv.itemconfig(square, fill=color)
 
-        for king in self.kingsInCheck:
-            self.boardCanv.itemconfigure(self.squares[king.vector.tuple()], fill="red")
+        self.highlightKings()
 
     def highlight(self, vecs):
         for vec in vecs:
             self.boardCanv.itemconfigure(self.squares[vec.tuple()], fill="sky blue")
 
     def resize(self, *args):
+        self.update_idletasks()
         rankH = int(self.boardCanv.winfo_width() / self.board.rows)
         fileH = int(self.boardCanv.winfo_height() / self.board.cols)
         self.square = (rankH, fileH)[rankH > fileH]
@@ -329,7 +585,6 @@ class ChessGame(tk.Tk):
         """Update all widgets of frame"""
         self.historyString.set(readable(self.board.history, len(self.board.turnorder)))
         self.photos = []
-
         for (row, col), square in self.squares.items():
             self.boardCanv.coords(square,
                 self.blackbarLeft + (col * self.square),

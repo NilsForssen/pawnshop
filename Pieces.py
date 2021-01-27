@@ -124,6 +124,7 @@ class Pawn(Piece):
 
         destList = []
         destVec = self.vector + self.forwardVec
+
         if self.canWalk(destVec, board):
             destList.append(destVec)
             if self.firstMove:

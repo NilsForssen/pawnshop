@@ -13,6 +13,20 @@ class Board():
         self._board = []
         self.ready = False
 
+    def __eq__(self, other):
+        for p1, p2 in zip(self, other):
+            if type(p1) == type(p2):
+                continue
+            else:
+                break
+
+        else:
+            return True
+        return False
+
+    def __ne__(self, other):
+        return not self == other
+
     def __iter__(self):
         """
         Returns iterator of board
@@ -107,7 +121,7 @@ class Board():
         with open(getResourcePath(__file__, "configurations/DefaultConfig.JSON"), "r") as default:
             dConfig = json.load(default)
 
-            self.rows = config.get("rows") or dConfig.get("rows ")
+            self.rows = config.get("rows") or dConfig.get("rows")
             self.cols = config.get("cols") or dConfig.get("cols")
             self.pieces = config.get("pieces") or dConfig.get("pieces")
             self.moves = config.get("moves") or dConfig.get("moves")
@@ -116,8 +130,10 @@ class Board():
             self.promoteAt = config.get("promoteAt") or dConfig.get("promteAt")
             self.turnorder = config.get("turnorder") or dConfig.get("turnorder")
 
-            self.currentTurn = self.turnorder[0]
-
+            try:
+                self.currentTurn = self.turnorder[0]
+            except IndexError:
+                self.currentTurn = None
             self._board = [[Empty(ChessVector((row, col))) for col in range(self.cols)] for row in range(self.rows)]
 
             for color, pieceList in self.pieces.items():
@@ -212,17 +228,12 @@ class Board():
 
         if not ignoreOrder and self.currentTurn != startPiece.color:
             raise TurnError
-        else:
-            self.advanceTurn()
 
         if self.checkmates[startPiece.color] and not ignoreMate:
             raise CheckMate
 
-        if checkMove:
-            if targetVec.matches(startPiece.getMoves(self, ignoreCheck=ignoreCheck, ignoreMate=ignoreMate)):
-                pass
-            else:
-                raise IllegalMove(startVec.getStr(self), targetVec.getStr(self))
+        if checkMove and not targetVec.matches(startPiece.getMoves(self, ignoreCheck=ignoreCheck, ignoreMate=ignoreMate)):
+            raise IllegalMove(startVec.getStr(self), targetVec.getStr(self))
 
         for move in self.moves[startPiece.color]:
             if move.pieceCondition(startPiece):
@@ -256,6 +267,8 @@ class Board():
         self.history.append(notation)
         if printOut:
             print(notation)
+
+        self.advanceTurn()
         return notation
 
     def _addPiece(self, piece, vector):
@@ -295,7 +308,6 @@ class Board():
 
 
 def initClassic():
-
     board = Board()
     board.setup(deepcopy(ClassicConfig.CONFIG))
     return board
@@ -304,6 +316,12 @@ def initClassic():
 def init4P():
     board = Board()
     board.setup(deepcopy(FourPlayerConfig.CONFIG))
+    return board
+
+
+def initEmpty():
+    board = Board()
+    board.setup({})
     return board
 
 
