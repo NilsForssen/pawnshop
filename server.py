@@ -7,6 +7,16 @@ from Exceptions import PromotionError, Illegal
 server = "0.0.0.0"
 port = 5555
 
+MANDATORYFLAGS = {
+    "ignoreOrder": False,
+    "ignoreMate": False,
+    "ignoreCheck": False,
+    "checkForCheck": True,
+    "checkForMate": True,
+    "checkMove": True,
+    "printOut": False
+}
+
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 s.bind((server, port))

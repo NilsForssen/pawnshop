@@ -326,16 +326,16 @@ class ChessGame(tk.Tk):
         self.reInitBoard("Empty")
         self.loadDialog = LoadingDialog(self, txt=f"Waiting for other player to connect, \n your global IP-addres is 127.0.0.1")
         self.loadDialog.start()
-        self._waitID = self.after(self.pollingRate, lambda: self._checkLoadCancel(loop=True))
+        self._waitID = self.after(self.pollingRate, lambda: self._checkLoading(loop=True))
 
     def _updateVisuals(self):
         self.updateGraphics()
         self._updateID = self.after(self.pollingRate, self._updateVisuals)
 
-    def _checkLoadCancel(self, loop=False):
+    def _checkLoading(self, loop=False):
         if self.loadDialog.winfo_exists():
             if loop:
-                self.after(self.pollingRate, lambda: self._checkLoadCancel(loop=True))
+                self.after(self.pollingRate, lambda: self._checkLoading(loop=True))
             return True
         else:
             self.disconnect()
@@ -375,8 +375,11 @@ class ChessGame(tk.Tk):
             self._updateID = self.after(self.pollingRate, self._updateBoard)
             return True
         else:
-            if not self._checkLoadCancel():
-                return False
+            try:
+                if not self._checkLoading():
+                    return False
+            except AttributeError:
+                pass
             self._waitID = self.after(self.pollingRate, self._waitForGame)
             return False
 
