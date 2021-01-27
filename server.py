@@ -5,7 +5,7 @@ from ChessBoard import initClassic
 from Exceptions import PromotionError, Illegal
 
 server = "0.0.0.0"
-port = 5555
+port = 10000
 
 MANDATORYFLAGS = {
     "ignoreOrder": False,

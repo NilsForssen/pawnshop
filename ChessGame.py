@@ -297,7 +297,7 @@ class ChessGame(tk.Tk):
 
     def _server(self):
         server = "0.0.0.0"
-        port = 5555
+        port = 10000
         self.mySocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.mySocket.bind((server, port))
         self.mySocket.listen()
