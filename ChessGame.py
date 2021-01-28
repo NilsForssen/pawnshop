@@ -19,7 +19,7 @@ from socket import gaierror
 
 
 class LoadingDialog(tk.Toplevel):
-    def __init__(self, master, txt, GIFPath=getResourcePath(__file__, "Sprites/LoadingGIF.gif")):
+    def __init__(self, master, txt, GIFPath=getResourcePath("Sprites/LoadingGIF.gif")):
         super().__init__(master, bg="white")
         self._master = master
         self._txt = txt
@@ -74,7 +74,7 @@ class LoadingDialog(tk.Toplevel):
         self.destroy()
 
 
-IMAGEDIR = getResourcePath(__file__, "Sprites\\")
+IMAGEDIR = getResourcePath("Sprites\\")
 COLORS = {
     "black": (75, 75, 75),
     "white": (255, 255, 255),
@@ -218,7 +218,7 @@ class ChessGame(tk.Tk):
         self.drawBoard()
 
         # Set icon
-        self.iconphoto(True, ImageTk.PhotoImage(Image.open(IMAGEDIR + "King.ico")))
+        self.iconphoto(True, ImageTk.PhotoImage(Image.open(IMAGEDIR + "\\King.ico")))
 
         # Mainloop
         self.mainloop()

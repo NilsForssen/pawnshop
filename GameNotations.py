@@ -3,7 +3,7 @@
 import re
 from copy import deepcopy
 from ChessBoard import initClassic, Board
-from configurations import ClassicConfig
+import ClassicConfig
 from ChessVector import ChessVector
 from Pieces import *
 from Utils import toAlpha

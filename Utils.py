@@ -6,16 +6,15 @@ from PIL import Image
 from string import ascii_lowercase
 
 
-def getResourcePath(filePath, relativePath):
+def getResourcePath(relativePath):
     """Get resource
 
     More reliable when script is compiled with pyinstaller.
     """
-    resourcePath = os.path.join(os.path.dirname(os.path.abspath(filePath)), relativePath)
     if hasattr(sys, '_MEIPASS'):
-        return os.path.join(sys._MEIPASS, resourcePath)
+        return os.path.join(sys._MEIPASS, relativePath)
 
-    return os.path.join(os.path.abspath("."), resourcePath)
+    return os.path.join(os.path.abspath("."), relativePath)
 
 
 def fetchImage(color, imgpath):

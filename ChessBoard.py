@@ -4,7 +4,8 @@ import json
 from copy import deepcopy, copy
 from Utils import getResourcePath, countAlpha
 from Exceptions import *
-from configurations import ClassicConfig, FourPlayerConfig
+import ClassicConfig
+import FourPlayerConfig
 from Pieces import *
 
 
@@ -118,7 +119,7 @@ class Board():
         self.checkForCheck()
 
     def setup(self, config={}):
-        with open(getResourcePath(__file__, "configurations/DefaultConfig.JSON"), "r") as default:
+        with open(getResourcePath("Configurations\\DefaultConfig.JSON"), "r") as default:
             dConfig = json.load(default)
 
             self.rows = config.get("rows") or dConfig.get("rows")
