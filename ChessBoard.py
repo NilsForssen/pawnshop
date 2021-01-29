@@ -113,6 +113,9 @@ class Board():
         else:
             return res
 
+    def eval(self):
+        return {col: sum(list(map(lambda p: p.value, pieceList))) for col, pieceList in self.pieces.items() for piece in pieceList}
+
     def removeColor(self, color):
         vectors = list(map(lambda p: p.vector, self.pieces[color]))
         self[vectors] = [Empty(vector) for vector in vectors]
