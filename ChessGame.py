@@ -444,7 +444,7 @@ class ChessGame(tk.Tk):
         simpledialog.messagebox.showinfo("FEN Copied!", "FEN-string has been copied to clipboard!")
 
     def importFEN(self):
-        FEN = StringDialog.askstring("Load FEN!", "Enter a FEN string to load into the board.")
+        FEN = simpledialog.askstring("Load FEN!", "Enter a FEN string to load into the board.")
         self.board = FEN2Board(FEN)
         self.drawBoard()
 
@@ -521,7 +521,7 @@ class ChessGame(tk.Tk):
         except PromotionError:
             msg = "What do you want the pawn to promote to?"
             while True:
-                prompt = StringDialog.askstring("Promote!", msg)
+                prompt = simpledialog.askstring("Promote!", msg)
                 if prompt is None:
                     break
                 try:

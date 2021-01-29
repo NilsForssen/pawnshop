@@ -1,9 +1,3 @@
-# Classic_Test.py
-
-if __name__ == '__main__' and __package__ is None:
-    from os import sys, path
-    sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
-
 from ChessBoard import initClassic
 from Pieces import *
 from Exceptions import *
@@ -84,7 +78,7 @@ except IllegalMove:
 move("a7", "b6")
 
 # print(board.movePiece((4,7), (6,5)))
-move("h4", "f2")
+move("h4", "f2", ignoreOrder=True)
 
 try:
     # board.movePiece((7,4), (6,5))
