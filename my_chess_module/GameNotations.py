@@ -131,8 +131,6 @@ def board2FEN(board):
         if not rowi == board.rows - 1:
             FENString += "/"
 
-    #     for Emtpy
-    print(FENString)
     return FENString
 
 

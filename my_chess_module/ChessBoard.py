@@ -122,7 +122,7 @@ class Board():
         self.checkForCheck()
 
     def setup(self, config={}):
-        with open(getResourcePath("Configurations\\DefaultConfig.JSON"), "r") as default:
+        with open(getResourcePath("configurations\\DefaultConfig.JSON"), "r") as default:
             dConfig = json.load(default)
 
             self.rows = config.get("rows") or dConfig.get("rows")
