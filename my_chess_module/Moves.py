@@ -1,7 +1,7 @@
-from Pieces import *
+from .Pieces import *
 from abc import ABC, abstractclassmethod
-from Utils import createNotation
-from Exceptions import PromotionError
+from .Utils import createNotation
+from .Exceptions import PromotionError
 
 class Move(ABC):
 

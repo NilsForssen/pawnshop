@@ -1,13 +1,11 @@
-# GameNotations.py
-
 import re
 from copy import deepcopy
-from ChessBoard import initClassic, Board
-import ClassicConfig
-from ChessVector import ChessVector
-from Pieces import *
-from Utils import toAlpha
-from Moves import CastleK, CastleQ
+from .ChessBoard import initClassic, Board
+from . import ClassicConfig
+from .ChessVector import ChessVector
+from .Pieces import *
+from .Utils import toAlpha
+from .Moves import CastleK, CastleQ
 
 
 STANDARDTAGS = [

@@ -2,12 +2,12 @@
 
 from copy import deepcopy
 from abc import ABC, abstractmethod
-from Utils import (
+from .Utils import (
     _catchOutofBounce,
     _positivePos,
     removeDupes
 )
-from ChessVector import ChessVector
+from .ChessVector import ChessVector
 
 
 _directions = {

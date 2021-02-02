@@ -1,12 +1,15 @@
 # ChessBoard.py
-
 import json
+import os
 from copy import deepcopy, copy
-from Utils import getResourcePath, countAlpha
-from Exceptions import *
-import ClassicConfig
-import FourPlayerConfig
-from Pieces import *
+
+from .Utils import countAlpha
+from .Exceptions import *
+from .Pieces import *
+from . import (
+    ClassicConfig,
+    FourPlayerConfig
+)
 
 
 class Board():
@@ -122,7 +125,7 @@ class Board():
         self.checkForCheck()
 
     def setup(self, config={}):
-        with open(getResourcePath("configurations\\DefaultConfig.JSON"), "r") as default:
+        with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "configurations\\DefaultConfig.JSON"), "r") as default:
             dConfig = json.load(default)
 
             self.rows = config.get("rows") or dConfig.get("rows")
@@ -327,9 +330,3 @@ def initEmpty():
     board = Board()
     board.setup({})
     return board
-
-
-if __name__ == "__main__":
-
-    # Do some testing
-    pass

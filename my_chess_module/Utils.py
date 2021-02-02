@@ -1,35 +1,6 @@
 # Utils.py
 
-import sys
-import os
-from PIL import Image
 from string import ascii_lowercase
-
-
-def getResourcePath(relativePath):
-    """Get resource
-
-    More reliable when script is compiled with pyinstaller.
-    """
-    if hasattr(sys, '_MEIPASS'):
-        return os.path.join(sys._MEIPASS, relativePath)
-
-    return os.path.join(os.path.abspath("."), relativePath)
-
-
-def fetchImage(color, imgpath):
-    """Fetch image from disk"""
-    img = Image.open(imgpath)
-    pixels = img.load()
-    fullGreen = 255
-    r, g, b = color
-    for x in range(img.height):
-        for y in range(img.width):
-            _, greenVal, _, alpha = pixels[x, y]
-            if greenVal:
-                ratio = greenVal / fullGreen
-                pixels[x, y] = (round(r * ratio), round(g * ratio), round(b * ratio), alpha)
-    return img
 
 
 def _catchOutofBounce(func):

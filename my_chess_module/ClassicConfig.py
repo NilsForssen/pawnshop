@@ -1,10 +1,6 @@
-if __name__ == '__main__' and __package__ is None:
-    from os import sys, path
-    sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
-
-from Pieces import *
-from ChessVector import ChessVector
-from Moves import *
+from .Pieces import *
+from .ChessVector import ChessVector
+from .Moves import *
 
 _colors = ("black", "white")
 _black, _white = _colors
