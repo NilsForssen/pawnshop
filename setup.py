@@ -4,7 +4,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="my_chess_module",  # Replace with your own username
+    name="pawnshop",  # Replace with your own username
     version="0.0.1",
     author="Nils Forssén",
     author_email="forssennils@gmail.com",
@@ -14,7 +14,7 @@ setuptools.setup(
     url="https://github.com/pypa/sampleproject",
     packages=setuptools.find_packages(),
     package_data={
-        "my_chess_module": ["configurations\\*.JSON"]
+        "pawnshop": ["configurations\\*.JSON"]
     },
     classifiers=[
         "Programming Language :: Python :: 3",
