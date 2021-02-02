@@ -5,11 +5,11 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="pawnshop",  # Replace with your own username
-    version="0.0.1",
+    version="0.0.2",
     author="Nils Forssén",
     author_email="forssennils@gmail.com",
     description="A simple chess module as hobby project.",
-    long_description="",
+    long_description="Little description of project",
     long_description_content_type="text/markdown",
     url="https://github.com/pypa/sampleproject",
     packages=setuptools.find_packages(),
