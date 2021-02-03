@@ -1,4 +1,10 @@
-from .Utils import countAlpha, inverseIdx, toAlpha
+# ChessVector.py
+
+from .Utils import (
+    countAlpha,
+    inverseIdx,
+    toAlpha
+)
 
 
 class ChessVector(object):

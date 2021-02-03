@@ -1,3 +1,5 @@
+# ClassicConfig.py
+
 from .Pieces import *
 from .ChessVector import ChessVector
 from .Moves import *

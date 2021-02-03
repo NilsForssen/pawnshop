@@ -1,4 +1,5 @@
 # ChessBoard.py
+
 import json
 import os
 from copy import deepcopy, copy
