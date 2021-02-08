@@ -36,7 +36,7 @@ def createNotation(board, startPiece, targetVec, isPawn=False, capture=False):
 
     if not isPawn:
         notation = startPiece.symbol
-        for piece in board.pieces[startPiece.color]:
+        for piece in board.iterPieces(startPiece.color):
             if not piece is startPiece and isinstance(piece, type(startPiece)):
                 if targetVec.matches(piece.getMoves(board, ignoreCheck=True)):
                     if piece.vector.col == startPiece.vector.col:
@@ -78,7 +78,7 @@ def countAlpha():
 
 
 def inverseIdx(num, board):
-    return str(board.rows - num)
+    return str(board.getRows() - num)
 
 
 def toAlpha(num):

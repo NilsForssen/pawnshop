@@ -27,7 +27,7 @@ class ChessVector(object):
                         raise ValueError("Position does not include column!")
                     alpha = position[:i]
                     num = position[i::]
-                    row = board.rows - int(num)
+                    row = board.getRows() - int(num)
                     for n, a in countAlpha():
                         if a == alpha:
                             col = n

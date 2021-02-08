@@ -39,7 +39,7 @@ class Piece(ABC):
     def getMoves(self, board, ignoreCheck=False, ignoreMate=False):
         """Returns board-specific moves of piece in board"""
         destList = []
-        for move in board.moves[self.color]:
+        for move in board.getMoves(self.color):
             if move.pieceCondition(self):
                 destList.extend(move.getDestinations(self, board))
 
@@ -48,8 +48,8 @@ class Piece(ABC):
 
             for dest in destList:
                 testBoard = deepcopy(board)
-                testBoard.movePiece(self.vector, dest, ignoreMate=ignoreMate, checkForMate=False, printOut=False, checkMove=False, promote=Queen, ignoreOrder=True)
-                if testBoard.checks[self.color]:
+                testBoard.movePiece(self.vector, dest, ignoreMate=ignoreMate, checkForMate=False, printout=False, checkMove=False, promote=Queen, ignoreOrder=True)
+                if testBoard.getChecks(self.color):
                     remove.append(dest)
 
             for dest in remove:

@@ -36,14 +36,14 @@ class Standard(Move):
 
         promo = False
 
-        for pieceType in board.promoteFrom[startPiece.color]:
+        for pieceType in board.getPromoteFrom(startPiece.color):
             if isinstance(startPiece, pieceType):
 
-                if startPiece.rank + abs((startPiece.vector - targetVec).tuple()[startPiece.forwardVec.col]) == board.promoteAt[startPiece.color]:
+                if startPiece.rank + abs((startPiece.vector - targetVec).tuple()[startPiece.forwardVec.col]) == board.getPromoteAt(startPiece.color):
                     if promote is None:
                         raise PromotionError
 
-                    if promote not in board.promoteTo[startPiece.color]:
+                    if promote not in board.getPromoteTo(startPiece.color):
                         raise PromotionError(
                             f"{startPiece.color} cannot promote to {promote}!")
 
@@ -114,7 +114,7 @@ class _Castling(Move):
             return bool(vec2.row - vec1.row) != bool(vec2.col - vec1.col) and (not vec2.row - vec1.row or not vec2.col - vec2.col)
 
         rookList = []
-        for p in board.pieces[piece.color]:
+        for p in board.iterPieces(piece.color):
             if isinstance(p, Rook) and p.firstMove and vecCondition(piece.vector, p.vector):
                 rookList.append(p)
         return rookList
@@ -134,7 +134,7 @@ class CastleK(_Castling):
     @classmethod
     def getDestinations(thisMove, piece, board, *args, **kwargs):
         destList = []
-        if not board.checks[piece.color]:
+        if not board.getChecks(piece.color):
             for rook in thisMove.findRooks(piece, board):
                 between = thisMove.findBetween(piece.vector, rook.vector)
                 if thisMove.emptyBetween(board, between) and not len(between) % 2:
@@ -158,7 +158,7 @@ class CastleQ(_Castling):
     @classmethod
     def getDestinations(thisMove, piece, board, *args, **kwargs):
         destList = []
-        if not board.checks[piece.color]:
+        if not board.getChecks(piece.color):
             for rook in thisMove.findRooks(piece, board):
                 between = thisMove.findBetween(piece.vector, rook.vector)
                 if thisMove.emptyBetween(board, between) and len(between) % 2:
