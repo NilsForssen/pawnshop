@@ -3,6 +3,8 @@
 import json
 import os
 from copy import deepcopy, copy
+from functools import wraps
+from typing import Union, List, Dict, Iterable
 
 from .ChessVector import ChessVector
 from .Utils import countAlpha
@@ -12,9 +14,11 @@ from . import (
     ClassicConfig,
     FourPlayerConfig
 )
+from .Moves import Move
 
 
 def _defaultColors(func):
+    @wraps(func)
     def wrapper(self, *colors):
         if not colors:
             colors = self.getColors()
@@ -167,24 +171,16 @@ class Board():
         else:
             return res
 
-    def getRows(self):
-        """Get how many rows in board
+    def getRows(self) -> int:
+        """Get rows in board
 
         :returns: Number of rows in board
         :rtype: ``int``
         """
         return self._rows
 
-    @_defaultColors
-    def getChecks(self, *colors):
-        return {col: self._checks[col] for col in colors}
-
-    @_defaultColors
-    def getCheckmates(self, *colors):
-        return {col: self._checkmates[col] for col in colors}
-
-    def getCols(self):
-        """Get how many columns in board
+    def getCols(self) -> int:
+        """Get columns in board
 
         :returns: Number of columns in board
         :rtype: ``int``
@@ -192,26 +188,97 @@ class Board():
         return self._cols
 
     @_defaultColors
-    def getKings(self, *colors):
+    def getChecks(self, *colors: str) -> Union[bool, Dict[str, bool]]:
+        """Get checks in board
+
+        If more than one color is given, this returns a ``dict``
+        with a ``bool`` corresponding to each color.
+
+        :param *colors: Colors to return
+        :returns: If colors are in check or not
+        :rtype: ``bool`` or ``dict``
+        """
+        return {col: self._checks[col] for col in colors}
+
+    @_defaultColors
+    def getCheckmates(self, *colors: str) -> Union[bool, Dict[str, bool]]:
+        """Get checkmates in board
+
+        If more than one color is given, this returns a ``dict``
+        with a ``bool`` corresponding to each color.
+
+        :param *colors: Colors to return
+        :returns: If colors are in checkmate or not
+        :rtype: ``bool`` or ``dict``
+        """
+        return {col: self._checkmates[col] for col in colors}
+
+    @_defaultColors
+    def getKings(self, *colors: str) -> Union[List[King], Dict[str, List[King]]]:
+        """Get kings in board
+
+        If more than one color is given, this returns a ``dict``
+        with a ``list`` of kings corresponding to each color.
+
+        :param *colors: Colors to return
+        :returns: All kings of colors in board
+        :rtype: ``list`` or ``dict``
+        """
         return {col: self._kings[col] for col in colors}
 
     @_defaultColors
-    def getMoves(self, *colors):
+    def getMoves(self, *colors: str) -> Union[List[Move], Dict[str, List[Move]]]:
+        """Get moves of board
+
+        If more than one color is given, this returns a ``dict``
+        with a ``list`` of moves corresponding to each color.
+
+        :param *colors: Colors to return
+        :returns: All moves of colors in board
+        :rtype: ``list`` or ``dict``
+        """
         return {col: self._moves[col] for col in colors}
 
     @_defaultColors
-    def getPromoteAt(self, *colors):
+    def getPromoteAt(self, *colors: str) -> Union[int, Dict[str, int]]:
+        """Get promotion position of board
+
+        If more than one color is given, this returns a ``dict``
+        with a ``int`` corresponding to each color.
+
+        :param *colors: Colors to return
+        :returns: The promotion position of colors in board
+        :rtype: ``list`` or ``dict``
+        """
         return {col: self._promoteAt[col] for col in colors}
 
     @_defaultColors
-    def getPromoteFrom(self, *colors):
+    def getPromoteFrom(self, *colors: str) -> Union[List[Piece], Dict[str, List[Piece]]]:
+        """Get promotion starting pieces of board
+
+        If more than one color is given, this returns a ``dict``
+        with a ``list`` corresponding to each color.
+
+        :param *colors: Colors to return
+        :returns: The promotion starting piece types of colors in board
+        :rtype: ``list`` or ``dict``
+        """
         return {col: self._promoteFrom[col] for col in colors}
 
     @_defaultColors
-    def getPromoteTo(self, *colors: str) -> dict:
+    def getPromoteTo(self, *colors: str) -> Union[List[Piece], Dict[str, List[Piece]]]:
+        """Get promotion target pieces of board
+
+        If more than one color is given, this returns a ``dict``
+        with a ``list`` corresponding to each color.
+
+        :param *colors: Colors to return
+        :returns: The promotion target piece types of colors in board
+        :rtype: ``list`` or ``dict``
+        """
         return {col: self._promoteTo[col] for col in colors}
 
-    def getColors(self) -> list:
+    def getColors(self) -> List[str]:
         """Get all colors of board
 
         :returns: List of colors in board
@@ -220,24 +287,24 @@ class Board():
         return self._pieces.keys()
 
     @_defaultColors
-    def getChecks(self, *colors):
-        return {col: self._checks[col] for col in colors}
-
-    @_defaultColors
-    def iterPieces(self, *colors: str) -> iter:
+    def iterPieces(self, *colors: str) -> Iterable[Piece]:
         """Iterate through pieces of board
 
         Use __iter__ to iterate through all positions of the board.
 
         :param *colors: Colors of pieces to iterate through (default is all colors)
+        :yields: Every piece in board
+        :ytype: ``Piece``
         """
         for col in colors:
             for p in self._pieces[col]:
                 yield p
 
     @_defaultColors
-    def eval(self, *colors: str) -> dict:
+    def eval(self, *colors: str) -> Dict[str, int]:
         """Evaluate board
+
+        Returns the sum of all pieces' values of colors in board
 
         :param *colors: Colors to evaluate (defaults to all colors of board)
 
@@ -246,7 +313,7 @@ class Board():
         """
         return {col: sum(list(map(lambda p: p.value, list(self.iterPieces(col))))) for col in colors}
 
-    def removeColor(self, color: str):
+    def removeColor(self, color: str) -> None:
         """Remove color from board
 
         :param color: Color to remove
@@ -255,7 +322,7 @@ class Board():
         self[vectors] = [Empty(vector) for vector in vectors]
         self.checkForCheck()
 
-    def swapPositions(self, vec1: ChessVector, vec2: ChessVector):
+    def swapPositions(self, vec1: ChessVector, vec2: ChessVector) -> None:
         """Swap position of two pieces
 
         :param vec1: Starting position of first piece
@@ -339,7 +406,7 @@ class Board():
                 else:
                     self._checkmates[color] = True
 
-    def advanceTurn(self):
+    def advanceTurn(self) -> None:
         """Advance the turn according to turnorder
         """
         newidx = self._turnorder.index(self.currentTurn) + 1
@@ -348,10 +415,10 @@ class Board():
         except IndexError:
             self.currentTurn = self._turnorder[0]
 
-    def movePiece(self, startVec, targetVec,
+    def movePiece(self, startVec: ChessVector, targetVec: ChessVector,
                   ignoreOrder=False, ignoreMate=False, ignoreCheck=False,
                   checkForCheck=True, checkForMate=True, checkMove=True,
-                  printout=True, promote=None):
+                  printout=True, promote=None) -> str:
         """Move piece on board
 
         :param startVec: Position of moving piece
@@ -421,8 +488,7 @@ class Board():
         self.advanceTurn()
         return notation
 
-    def _addPiece(self, piece, vector):
-
+    def _addPiece(self, piece: Piece, vec: ChessVector) -> None:
         if not piece.color in self.getColors():
             self._pieces[piece.color] = []
             self._kings[piece.color] = []
@@ -434,9 +500,9 @@ class Board():
         if isinstance(piece, King):
             self._kings[piece.color].append(piece)
 
-        piece.vector = vector
+        piece.vector = vec
 
-    def _removePiece(self, piece):
+    def _removePiece(self, piece: Piece) -> None:
 
         self._pieces[piece.color].remove(piece)
 
@@ -457,7 +523,7 @@ class Board():
         piece.vector = None
 
 
-def initClassic():
+def initClassic() -> Board:
     """Initialize a chessBoard setup for 2 players, classic setup
 
     :returns: Classic chessboard
@@ -467,7 +533,7 @@ def initClassic():
     return board
 
 
-def init4P():
+def init4P() -> Board:
     """Initialize a chessboard setup for four players
 
     :returns 4 player chessboard
