@@ -1,8 +1,10 @@
 # ChessBoard.py
+
 import json
 import os
 from copy import deepcopy, copy
 
+from .ChessVector import ChessVector
 from .Utils import countAlpha
 from .Exceptions import *
 from .Pieces import *
@@ -13,9 +15,49 @@ from . import (
 
 
 class Board():
-    def __init__(self):
+    """Board object for storing pieces and moving pieces.
+
+    :param config: Board configuration (defaults to emtpy board)
+    :type config: dict
+    """
+
+    def __init__(self, config={}):
+
+        if not config:
+            self.ready = True
+
         self._board = []
-        self.ready = False
+        with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "configurations\\DefaultConfig.JSON"), "r") as default:
+            dConfig = json.load(default)
+
+            self.rows = config.get("rows") or dConfig.get("rows")
+            self.cols = config.get("cols") or dConfig.get("cols")
+            self.pieces = config.get("pieces") or dConfig.get("pieces")
+            self.moves = config.get("moves") or dConfig.get("moves")
+            self.promoteTo = config.get("promoteTo") or dConfig.get("promoteTo")
+            self.promoteFrom = config.get("promoteFrom") or dConfig.get("promoteFrom")
+            self.promoteAt = config.get("promoteAt") or dConfig.get("promteAt")
+            self.turnorder = config.get("turnorder") or dConfig.get("turnorder")
+
+            try:
+                self.currentTurn = self.turnorder[0]
+            except IndexError:
+                self.currentTurn = None
+            self._board = [[Empty(ChessVector((row, col))) for col in range(self.cols)] for row in range(self.rows)]
+
+            for color, pieceList in self.pieces.items():
+                for piece in pieceList:
+                    self[piece.vector] = piece
+
+            for vec in config.get("disabled") or dConfig.get("disabled"):
+                self[vec] = Disabled(vec)
+
+        self.checks = {key: False for key in self.pieces.keys()}
+        self.checkmates = copy(self.checks)
+        self.kings = {key: [piece for piece in self.pieces[key] if isinstance(piece, King)] for key in self.pieces.keys()}
+        self.history = []
+
+        self.checkForCheck()
 
     def __eq__(self, other):
         for p1, p2 in zip(self, other):
@@ -32,10 +74,9 @@ class Board():
         return not self == other
 
     def __iter__(self):
-        """
-        Returns iterator of board
+        """Iterates through all positions in board
 
-        Starting from top left, iterates through evey piece of the board
+        Use iterPieces() method to iterate through pieces of board.
         """
         for p in [p for row in self._board for p in row]:
             yield p
@@ -117,67 +158,70 @@ class Board():
             return res
 
     def eval(self):
+        """Evaluate board
+
+        :returns: All colors of board with corresponding sum of pieces
+        :rtype: dict
+        """
         return {col: sum(list(map(lambda p: p.value, pieceList))) for col, pieceList in self.pieces.items() for piece in pieceList}
 
-    def removeColor(self, color):
+    def removeColor(self, color: str):
+        """Remove color from board
+
+        :param color: Color to remove
+        """
         vectors = list(map(lambda p: p.vector, self.pieces[color]))
         self[vectors] = [Empty(vector) for vector in vectors]
         self.checkForCheck()
 
-    def setup(self, config={}):
-        with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "configurations\\DefaultConfig.JSON"), "r") as default:
-            dConfig = json.load(default)
+    def swapPositions(self, vec1: ChessVector, vec2: ChessVector):
+        """Swap position of two pieces
 
-            self.rows = config.get("rows") or dConfig.get("rows")
-            self.cols = config.get("cols") or dConfig.get("cols")
-            self.pieces = config.get("pieces") or dConfig.get("pieces")
-            self.moves = config.get("moves") or dConfig.get("moves")
-            self.promoteTo = config.get("promoteTo") or dConfig.get("promoteTo")
-            self.promoteFrom = config.get("promoteFrom") or dConfig.get("promoteFrom")
-            self.promoteAt = config.get("promoteAt") or dConfig.get("promteAt")
-            self.turnorder = config.get("turnorder") or dConfig.get("turnorder")
-
-            try:
-                self.currentTurn = self.turnorder[0]
-            except IndexError:
-                self.currentTurn = None
-            self._board = [[Empty(ChessVector((row, col))) for col in range(self.cols)] for row in range(self.rows)]
-
-            for color, pieceList in self.pieces.items():
-                for piece in pieceList:
-                    self[piece.vector] = piece
-
-            for vec in config.get("disabled") or dConfig.get("disabled"):
-                self[vec] = Disabled(vec)
-
-        self.checks = {key: False for key in self.pieces.keys()}
-        self.checkmates = copy(self.checks)
-        self.kings = {key: [piece for piece in self.pieces[key] if isinstance(piece, King)] for key in self.pieces.keys()}
-        self.history = []
-
-        self.checkForCheck()
-
-        self.ready = True
-
-    def swapPositions(self, vec1, vec2):
+        :param vec1: Starting position of first piece
+        :param vec2: Starting position of second piece
+        """
         self._board[vec1.row][vec1.col].move(vec2)
         self._board[vec2.row][vec2.col].move(vec1)
         self._board[vec1.row][vec1.col], self._board[vec2.row][vec2.col] = self._board[vec2.row][vec2.col], self._board[vec1.row][vec1.col]
 
-    def isEmpty(self, vector):
-        return isinstance(self[vector], Empty)
+    def isEmpty(self, vec: ChessVector) -> bool:
+        """Check if position is empty
 
-    def isThreatened(self, vector, alliedColor):
+        :param vec: Position to check
+        :returns: True if position is empty, else False
+        :rtype: bool
+        """
+        return isinstance(self[vec], Empty)
+
+    def isThreatened(self, vec: ChessVector, alliedColor: str) -> bool:
+        """Check if position is threatened by enemy pieces
+
+        :param vector: Position to check for threats
+        :param alliedColor: Color to exclude from enemy pieces
+        :returns: True if position is threatened, else False
+        :rtype: bool
+        """
         hostilePieces = [piece for col, pList in self.pieces.items() if col != alliedColor for piece in pList]
 
         for hp in hostilePieces:
             hostile = hp.getMoves(self, ignoreCheck=True)
-            if vector in hostile:
+            if vec in hostile:
                 return True
         else:
             return False
 
     def checkForCheck(self, checkForMate=True):
+        """Check for any checks in board
+
+        If checkForMate is True and king is in check,
+        method checks if any allied pieces can move to
+        interfere with the threatened check.
+
+
+
+        :param checkForMate: Flag False to ignore checkmate (default is True)
+        :returns: None, attributes checks
+        """
         for color in self.pieces.keys():
 
             for alliedKing in self.kings[color]:
@@ -315,18 +359,15 @@ class Board():
 
 
 def initClassic():
-    board = Board()
-    board.setup(deepcopy(ClassicConfig.CONFIG))
+    board = Board(deepcopy(ClassicConfig.CONFIG))
     return board
 
 
 def init4P():
-    board = Board()
-    board.setup(deepcopy(FourPlayerConfig.CONFIG))
+    board = Board(deepcopy(FourPlayerConfig.CONFIG))
     return board
 
 
-def initEmpty():
-    board = Board()
-    board.setup({})
-    return board
+board = initClassic()
+
+board.isThreatened()
