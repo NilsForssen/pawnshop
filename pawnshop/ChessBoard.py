@@ -15,10 +15,9 @@ from . import (
 
 
 class Board():
-    """Board object for storing pieces and moving pieces.
+    """Board object for storing and moving pieces
 
     :param config: Board configuration (defaults to emtpy board)
-    :type config: dict
     """
 
     def __init__(self, config={}):
@@ -161,7 +160,7 @@ class Board():
         """Evaluate board
 
         :returns: All colors of board with corresponding sum of pieces
-        :rtype: dict
+        :rtype: ´´dict´´
         """
         return {col: sum(list(map(lambda p: p.value, pieceList))) for col, pieceList in self.pieces.items() for piece in pieceList}
 
@@ -189,7 +188,7 @@ class Board():
 
         :param vec: Position to check
         :returns: True if position is empty, else False
-        :rtype: bool
+        :rtype: ´´bool´´
         """
         return isinstance(self[vec], Empty)
 
@@ -199,7 +198,7 @@ class Board():
         :param vector: Position to check for threats
         :param alliedColor: Color to exclude from enemy pieces
         :returns: True if position is threatened, else False
-        :rtype: bool
+        :rtype: ´´bool´´
         """
         hostilePieces = [piece for col, pList in self.pieces.items() if col != alliedColor for piece in pList]
 
@@ -217,10 +216,8 @@ class Board():
         method checks if any allied pieces can move to
         interfere with the threatened check.
 
-
-
         :param checkForMate: Flag False to ignore checkmate (default is True)
-        :returns: None, attributes checks
+        :returns: None, stores result in attributes "checks" and "checkmates"
         """
         for color in self.pieces.keys():
 
@@ -261,6 +258,8 @@ class Board():
                     self.checkmates[color] = True
 
     def advanceTurn(self):
+        """Advance the turn according to turnorder
+        """
         newidx = self.turnorder.index(self.currentTurn) + 1
         try:
             self.currentTurn = self.turnorder[newidx]
@@ -270,7 +269,24 @@ class Board():
     def movePiece(self, startVec, targetVec,
                   ignoreOrder=False, ignoreMate=False, ignoreCheck=False,
                   checkForCheck=True, checkForMate=True, checkMove=True,
-                  printOut=True, *args, **kwargs):
+                  priout=True):
+        """Move piece on board
+
+        :param startVec: Position of moving piece
+        :param targetVec: Destination of moving piece
+        :param **Flags: Flags altering move rules, see below
+        :returns: Notation of move
+        :rtype: ´´str´´
+
+        :**Flags:
+            :ignoreOrder (False): Ignore the turnorder
+            :ignoreMate (False): Ignore if any pieces are in checkmate
+            :ignoreCheck (False): Ignore if any pieces are in check
+            :checkForCheck (True): Check for any checks after move
+            :checkForMate (True): Check for any checkmates after move
+            :checkMove (True): Check if piece is able to move to destination
+            :printout (True): Print the results of the move; checks, checkmates and move notation
+        """
 
         if self.isEmpty(startVec):
             raise EmptyError(startVec.getStr(self))
@@ -359,15 +375,20 @@ class Board():
 
 
 def initClassic():
+    """Initialize a chessBoard setup for 2 players, classic setup
+
+    :returns: Classic chessboard
+    :rtype: ´´Board´´
+    """
     board = Board(deepcopy(ClassicConfig.CONFIG))
     return board
 
 
 def init4P():
+    """Initialize a chessboard setup for four players
+
+    :returns 4 player chessboard
+    :rtype: ´´Board´´
+    """
     board = Board(deepcopy(FourPlayerConfig.CONFIG))
     return board
-
-
-board = initClassic()
-
-board.isThreatened()
