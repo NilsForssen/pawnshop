@@ -1,6 +1,10 @@
 # Utils.py
 
+from typing import List, Generator
 from string import ascii_lowercase
+from .ChessVector import ChessVector
+from .ChessBoard import Board
+from .Piece import Piece
 
 
 def _catchOutofBounce(func):
@@ -21,7 +25,13 @@ def _positivePos(func):
     return wrapper
 
 
-def removeDupes(vectorList):
+def removeDupes(vectorList: List[ChessVector]) -> List[ChessVector]:
+    """Remove duplicate positions
+
+    :param vectorList: List to remove duplicates from
+    :returns: List without duplicates
+    :rtype: ``list``
+    """
     for i, superVec in enumerate(vectorList):
         if superVec.matches(vectorList[i + 1::]):
             vectorList.remove(superVec)
@@ -30,17 +40,31 @@ def removeDupes(vectorList):
         return vectorList
 
 
-def createNotation(board, startPiece, targetVec, isPawn=False, capture=False):
+def createNotation(board: Board, startPiece: Piece, targetVec: ChessVector, isPawn=False, capture=False) -> str:
+    """Create a notation for a move
+
+    Creates notation of move according to standard chess notation.
+
+    :param startPiece: Piece to be moved
+    :param targetVec: Destination of move
+    :param **Flags: Flags to create notation
+    :returns: Notation of move
+    :rtype: ``str``
+
+    :**Flags:
+        :isPawn (True):
+        :capture (True):
+    """
     notation = ""
     targetNot = targetVec.getStr(board)
 
     if not isPawn:
         notation = startPiece.symbol
         for piece in board.iterPieces(startPiece.color):
-            if not piece is startPiece and isinstance(piece, type(startPiece)):
+            if piece is not startPiece and isinstance(piece, type(startPiece)):
                 if targetVec.matches(piece.getMoves(board, ignoreCheck=True)):
                     if piece.vector.col == startPiece.vector.col:
-                        notation += invertIdx(startPiece.vector.row, board)
+                        notation += inverseIdx(startPiece.vector.row, board)
                     else:
                         notation += toAlpha(startPiece.vector.col)
                     break
@@ -54,7 +78,15 @@ def createNotation(board, startPiece, targetVec, isPawn=False, capture=False):
     return notation
 
 
-def countAlpha():
+def countAlpha() -> Generator[str]:
+    """Generator to count in alphabetical order
+
+    Counts in alphabetical order.
+    a->b->c->...->aa->ab->...->ba->...
+
+    :yields: Character
+    :ytype: ``generator``
+    """
     stringList = [0]
     num = 0
     while True:
@@ -77,17 +109,31 @@ def countAlpha():
                 break
 
 
-def inverseIdx(num, board):
-    return str(board.getRows() - num)
+def inverseIdx(idx: int, board: Board) -> str:
+    """Inverse index
+
+    Inverses idx given board rows and returns string
+
+    :param idx: Index to reverse
+    :param board: Board to reverse according to rows
+    :returns: Reversed index
+    :rtype: ``str``
+    """
+    return str(board.getRows() - idx)
 
 
-def toAlpha(num):
+def toAlpha(num: int) -> str:
+    """Convert number to alphabetical
+
+    Counts through all alpha until reaching number.
+    (I tried to make it not have to count through all alphas,
+    however, since my alpha system doesn't match any regular
+    base number system I was not able to.)
+
+    :param num: Number to convert
+    :returns: Alphabetical string from num
+    :rtype: str
+    """
     for n, notation in countAlpha():
         if num == n:
             return notation
-
-
-if __name__ == "__main__":
-
-    # Do some testing
-    pass

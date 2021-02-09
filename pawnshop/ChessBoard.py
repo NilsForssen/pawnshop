@@ -4,7 +4,7 @@ import json
 import os
 from copy import deepcopy, copy
 from functools import wraps
-from typing import Union, List, Dict, Iterable
+from typing import Union, List, Dict, Generator
 
 from .ChessVector import ChessVector
 from .Utils import countAlpha
@@ -287,14 +287,14 @@ class Board():
         return self._pieces.keys()
 
     @_defaultColors
-    def iterPieces(self, *colors: str) -> Iterable[Piece]:
+    def iterPieces(self, *colors: str) -> Generator[Piece]:
         """Iterate through pieces of board
 
         Use __iter__ to iterate through all positions of the board.
 
         :param *colors: Colors of pieces to iterate through (default is all colors)
         :yields: Every piece in board
-        :ytype: ``Piece``
+        :ytype: ``generator``
         """
         for col in colors:
             for p in self._pieces[col]:
