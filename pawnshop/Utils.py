@@ -1,11 +1,12 @@
 # Utils.py
 
-from typing import List, Generator
+from typing import List, Generator, TYPE_CHECKING
 from string import ascii_lowercase
-from .ChessVector import ChessVector
-from .ChessBoard import Board
-from .Piece import Piece
 
+if TYPE_CHECKING:
+    from .ChessBoard import Board
+    from .ChessVector import ChessVector
+    from .Pieces import Piece
 
 def _catchOutofBounce(func):
     """Decorator for catching out of bounce ´´IndexError´´"""
@@ -15,7 +16,6 @@ def _catchOutofBounce(func):
         except IndexError:
             return False
     return wrapper
-
 
 
 def _positivePos(func):
@@ -28,7 +28,7 @@ def _positivePos(func):
     return wrapper
 
 
-def removeDupes(vectorList: List[ChessVector]) -> List[ChessVector]:
+def removeDupes(vectorList: List["ChessVector"]) -> List["ChessVector"]:
     """Remove duplicate positions
 
     :param vectorList: List to remove duplicates from
@@ -43,7 +43,7 @@ def removeDupes(vectorList: List[ChessVector]) -> List[ChessVector]:
         return vectorList
 
 
-def createNotation(board: Board, startPiece: Piece, targetVec: ChessVector, isPawn=False, capture=False) -> str:
+def createNotation(board: "Board", startPiece: "Piece", targetVec: "ChessVector", isPawn=False, capture=False) -> str:
     """Create a notation for a move
 
     Creates notation of move according to standard chess notation.
@@ -81,7 +81,7 @@ def createNotation(board: Board, startPiece: Piece, targetVec: ChessVector, isPa
     return notation
 
 
-def countAlpha() -> Generator[str]:
+def countAlpha() -> Generator[str, None, None]:
     """Generator to count in alphabetical order
 
     Counts in alphabetical order.
@@ -112,7 +112,7 @@ def countAlpha() -> Generator[str]:
                 break
 
 
-def inverseIdx(idx: int, board: Board) -> str:
+def inverseIdx(idx: int, board: "Board") -> str:
     """Inverse index
 
     Inverses idx given board rows and returns string
@@ -140,6 +140,7 @@ def toAlpha(num: int) -> str:
     for n, notation in countAlpha():
         if num == n:
             return notation
+
 
 if __name__ == "__main__":
     # Do some testing

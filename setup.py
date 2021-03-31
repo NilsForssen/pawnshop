@@ -8,10 +8,10 @@ setuptools.setup(
     version="0.0.2",
     author="Nils Forssén",
     author_email="forssennils@gmail.com",
-    description="A simple chess module as hobby project.",
-    long_description="Little description of project",
+    description="A simple chess library as hobby project.",
+    long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/pypa/sampleproject",
+    url="https://github.com/NilsForssen/pawnshop",
     packages=setuptools.find_packages(),
     package_data={
         "pawnshop": ["configurations\\*.JSON"]

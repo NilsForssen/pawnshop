@@ -2,15 +2,12 @@
 
 from copy import deepcopy
 from abc import ABC, abstractmethod
-from typing import List
-from .Utils import (
-    _catchOutofBounce,
-    _positivePos,
-    removeDupes
-)
+from typing import List, Tuple, TYPE_CHECKING
+from .Utils import _positivePos, _catchOutofBounce, removeDupes
 from .ChessVector import ChessVector
-from .ChessBoard import Board
 
+if TYPE_CHECKING:
+    from .ChessBoard import Board
 
 _directions = {
     "up": ((-1, 0), (-1, -1), (-1, 1)),
@@ -18,7 +15,6 @@ _directions = {
     "right": ((0, 1), (-1, 1), (1, 1)),
     "left": ((0, -1), (1, -1), (-1, -1))
 }
-
 _directions = {key: [ChessVector(offset) for offset in _directions[key]] for key in _directions}
 
 
@@ -41,12 +37,12 @@ class Piece(ABC):
         return self.color[0] + self.symbol
 
     @abstractmethod
-    def getStandardMoves(self, board: Board):
+    def getStandardMoves(self, board: "Board"):
         """Returns standard destinations of piece in board
         """
         raise NotImplementedError
 
-    def getMoves(self, board: Board, ignoreCheck=False, ignoreMate=False) -> List[ChessVector]:
+    def getMoves(self, board: "Board", ignoreCheck=False, ignoreMate=False) -> List[ChessVector]:
         """Returns all moves of piece in board
 
         Uses board.getMoves() method to check what moves piece is allowed to.
@@ -87,7 +83,7 @@ class Piece(ABC):
         self.vector = destVector
         self.firstMove = False
 
-    def postAction(self, board: Board) -> None:
+    def postAction(self, board: "Board") -> None:
         """Do action after piece is moved in board
 
         Call this after a piece is moved in board
@@ -96,7 +92,7 @@ class Piece(ABC):
 
     @_positivePos
     @_catchOutofBounce
-    def canWalk(self, vector: ChessVector, board: Board) -> bool:
+    def canWalk(self, vector: ChessVector, board: "Board") -> bool:
         """Check if piece can walk to destination in board
 
         :param vector: Destination
@@ -108,7 +104,7 @@ class Piece(ABC):
 
     @_positivePos
     @_catchOutofBounce
-    def canCapture(self, vector: ChessVector, board: Board) -> bool:
+    def canCapture(self, vector: ChessVector, board: "Board") -> bool:
         """Check if piece can capture to destination in board
 
         :param vector: Destination
@@ -124,7 +120,7 @@ class Piece(ABC):
 
     @_positivePos
     @_catchOutofBounce
-    def canMove(self, vector: ChessVector, board: Board) -> bool:
+    def canMove(self, vector: ChessVector, board: "Board") -> bool:
         """Check if piece can capture to destination in board
 
         :param vector: Destination
@@ -138,7 +134,7 @@ class Piece(ABC):
         except AttributeError:
             return board.isEmpty(vector)
 
-    def _getMovesInLine(self, iterVector: ChessVector, board: Board) -> List[ChessVector]:
+    def _getMovesInLine(self, iterVector: ChessVector, board: "Board") -> List[ChessVector]:
         """Get moves in one line
 
         Return all positions piece is can move to iterating with iterVector.
@@ -153,7 +149,7 @@ class Piece(ABC):
         newV = self.vector
         while True:
             newV += iterVector
-            if self.canWalk(newV, st):
+            if self.canWalk(newV, board):
                 moveList.append(newV)
             elif self.canCapture(newV, board):
                 moveList.append(newV)
@@ -170,6 +166,7 @@ class Pawn(Piece):
     :param direction: Movement direction of Pawn (default is "up")
     :param rank: Starting rank of pawn, used to calc promote
     """
+
     def __init__(self, color: str, direction="up", rank=2, *args, **kwargs):
         super().__init__(color, 1, "P")
 
@@ -182,7 +179,7 @@ class Pawn(Piece):
         else:
             raise ValueError(f"Direction is not any of {_directions.keys()}")
 
-    def getStandardMoves(self, board: Board) -> List[ChessVector]:
+    def getStandardMoves(self, board: "Board") -> List[ChessVector]:
         """Returns standard destinations of piece in board
 
         :param board: Board to check in
@@ -240,10 +237,11 @@ class Rook(Piece):
 
     :param color: Color of piece
     """
+
     def __init__(self, color: str, *args, **kwargs):
         super().__init__(color, 5, "R")
 
-    def getStandardMoves(self, board: Board) -> List[ChessVector]:
+    def getStandardMoves(self, board: "Board") -> List[ChessVector]:
         """Returns standard destinations of piece in board
 
         :param board: Board to check in
@@ -262,10 +260,11 @@ class Knight(Piece):
 
     :param color: Color of piece
     """
+
     def __init__(self, color: str, *args, **kwargs):
         super().__init__(color, 3, "N")
 
-    def getStandardMoves(self, board: Board) -> List[ChessVector]:
+    def getStandardMoves(self, board: "Board") -> List[ChessVector]:
         """Returns standard destinations of piece in board
 
         :param board: Board to check in
@@ -297,10 +296,11 @@ class Bishop(Piece):
 
     :param color: Color of piece
     """
+
     def __init__(self, color: str, *args, **kwargs):
         super().__init__(color, 3, "B")
 
-    def getStandardMoves(self, board: Board) -> List[ChessVector]:
+    def getStandardMoves(self, board: "Board") -> List[ChessVector]:
         """Returns standard destinations of piece in board
 
         :param board: Board to check in
@@ -318,10 +318,11 @@ class King(Piece):
 
     :param color: Color of piece
     """
+
     def __init__(self, color: str, *args, **kwargs):
         super().__init__(color, int(1e10), "K")
 
-    def getStandardMoves(self, board: Board) -> List[ChessVector]:
+    def getStandardMoves(self, board: "Board") -> List[ChessVector]:
         """Returns standard destinations of piece in board
 
         :param board: Board to check in
@@ -341,10 +342,11 @@ class Queen(Piece):
 
     :param color: Color of piece
     """
+
     def __init__(self, color: str, *args, **kwargs):
         super().__init__(color, 9, "Q")
 
-    def getStandardMoves(self, board: Board) -> List[ChessVector]:
+    def getStandardMoves(self, board: "Board") -> List[ChessVector]:
         """Returns standard destinations of piece in board
 
         :param board: Board to check in
@@ -365,6 +367,7 @@ class Disabled():
 
     :param vector: Position of disabled square
     """
+
     def __init__(self, vector: ChessVector, *args, **kwargs):
         self.vector = vector
 
@@ -388,6 +391,7 @@ class Empty():
 
     :param vector: Position of empty square
     """
+
     def __init__(self, vector: ChessVector, *args, **kwargs):
         self.vector = vector
 

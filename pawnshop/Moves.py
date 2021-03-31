@@ -1,12 +1,14 @@
 # Moves.py
 
-from Typing import List, Union, Tuple
-from .Pieces import *
-from .ChessBoard import Board
+from typing import List, Union, Tuple, TYPE_CHECKING
 from abc import ABC, abstractclassmethod
+from .Pieces import *
 from .Utils import createNotation
 from .Exceptions import PromotionError
+from .ChessVector import ChessVector
 
+if TYPE_CHECKING:
+    from .ChessBoard import Board
 
 class Move(ABC):
     """Abstract class for moves in chess
@@ -19,7 +21,7 @@ class Move(ABC):
         raise NotImplementedError
 
     @abstractclassmethod
-    def getDestinations(thisMove, piece: Piece, board: Board, *args, **kwargs) -> list:
+    def getDestinations(thisMove, piece: Piece, board: "Board", *args, **kwargs) -> list:
         """Return list of possible destinations
         """
         raise NotImplementedError
@@ -49,7 +51,7 @@ class Standard(Move):
         return True
 
     @classmethod
-    def getDestinations(thisMove, piece: Piece, board: Board, *args, **kwargs) -> List[ChessVector]:
+    def getDestinations(thisMove, piece: Piece, board: "Board", *args, **kwargs) -> List[ChessVector]:
         """Get possible destinations of piece
 
         Calls piece.getStandardMoves() method to get all standard moves of piece.
@@ -63,7 +65,7 @@ class Standard(Move):
         return piece.getStandardMoves(board)
 
     @classmethod
-    def action(thisMove, startPiece: Piece, targetVec: ChessVector, board: Board, promote=None, *args, **kwargs) -> str:
+    def action(thisMove, startPiece: Piece, targetVec: ChessVector, board: "Board", promote=None, *args, **kwargs) -> str:
         """Performs the action of move
 
         Moves piece according to standard move rules.
@@ -130,7 +132,7 @@ class _Castling(Move):
         return piece.firstMove and isinstance(piece, King)
 
     @classmethod
-    def action(thisMove, startPiece: Piece, targetVec: ChessVector, board: Board, *args, **kwargs) -> None:
+    def action(thisMove, startPiece: Piece, targetVec: ChessVector, board: "Board", *args, **kwargs) -> None:
         """Performs the action of move
 
         Moves piece according to move rules.
@@ -178,7 +180,7 @@ class _Castling(Move):
 
         return [ChessVector(idx) for idx in zip(rowRange, colRange)]
 
-    def emptyBetween(board: Board, between: List[ChessVector]) -> bool:
+    def emptyBetween(board: "Board", between: List[ChessVector]) -> bool:
         """Check if all positions are emtpy
 
         Helper funciton.
@@ -195,7 +197,7 @@ class _Castling(Move):
         else:
             return True
 
-    def findRooks(piece: Piece, board: Board) -> List[Piece]:
+    def findRooks(piece: Piece, board: "Board") -> List[Piece]:
         """Find all rooks in board that are on same lane as piece
 
         Helper function.
@@ -245,7 +247,7 @@ class CastleK(_Castling):
     """
 
     @classmethod
-    def getDestinations(thisMove, piece: Piece, board: Board, *args, **kwargs) -> List[ChessVector]:
+    def getDestinations(thisMove, piece: Piece, board: "Board", *args, **kwargs) -> List[ChessVector]:
         """Get possible destinations of piece
 
         Returns all possible castling moves of piece.
@@ -291,7 +293,7 @@ class CastleK(_Castling):
 class CastleQ(_Castling):
 
     @classmethod
-    def getDestinations(thisMove, piece: Piece, board: Board, *args, **kwargs) -> List[ChessVector]:
+    def getDestinations(thisMove, piece: Piece, board: "Board", *args, **kwargs) -> List[ChessVector]:
         """Get possible destinations of piece
 
         Returns all possible castling moves of piece.
@@ -351,7 +353,7 @@ class EnPassant(Move):
         return isinstance(piece, Pawn)
 
     @classmethod
-    def getDestinations(thisMove, piece: Piece, board: Board, *args, **kwargs) -> List[ChessVector]:
+    def getDestinations(thisMove, piece: Piece, board: "Board", *args, **kwargs) -> List[ChessVector]:
         """Get possible destinations of piece
 
         Returns all possible en-passant moves of piece.
@@ -373,7 +375,7 @@ class EnPassant(Move):
         return destList
 
     @classmethod
-    def action(thisMove, piece: Piece, targetVec: ChesVector, board: Board, *args, **kwargs) -> str:
+    def action(thisMove, piece: Piece, targetVec: ChessVector, board: "Board", *args, **kwargs) -> str:
         """Performs the action of move
 
         Moves piece according to move rules.

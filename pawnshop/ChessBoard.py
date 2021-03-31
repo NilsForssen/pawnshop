@@ -7,14 +7,11 @@ from functools import wraps
 from typing import Union, List, Dict, Generator
 
 from .ChessVector import ChessVector
+from .Pieces import *
+from .Moves import *
+from . import ClassicConfig, FourPlayerConfig
 from .Utils import countAlpha
 from .Exceptions import *
-from .Pieces import *
-from . import (
-    ClassicConfig,
-    FourPlayerConfig
-)
-from .Moves import Move
 
 
 def _defaultColors(func):
@@ -287,7 +284,7 @@ class Board():
         return self._pieces.keys()
 
     @_defaultColors
-    def iterPieces(self, *colors: str) -> Generator[Piece]:
+    def iterPieces(self, *colors: str) -> Generator[Piece, None, None]:
         """Iterate through pieces of board
 
         Use __iter__ to iterate through all positions of the board.
@@ -395,7 +392,7 @@ class Board():
                             else:
                                 break
 
-                        if testBoard.checks[color]:
+                        if testBoard._checks[color]:
                             continue
                         else:
                             self._checkmates[color] = False

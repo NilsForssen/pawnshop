@@ -1,7 +1,11 @@
 # ChessVector.py
-from Typing import Union, Tuple, List
-from .Utils import countAlpha, inverseIdx, toAlpha
-from .ChessBoard import Board
+
+from typing import Union, Tuple, List, TYPE_CHECKING
+from .Utils import toAlpha, inverseIdx, countAlpha
+# import pawnshop.ChessBoard
+
+if TYPE_CHECKING:
+    from pawnshop.ChessBoard import Board
 
 
 class ChessVector(object):
@@ -15,6 +19,7 @@ class ChessVector(object):
     :param position: Tuple or string notation position on chessboard
     :param board: Board to use when determining position given by string notation (default is None)
     """
+
     def __init__(self, position: Union[Tuple[int, int], str], board=None):
         self._row = 0
         self._col = 0
@@ -155,7 +160,7 @@ class ChessVector(object):
         """
         return (self._row, self._col)
 
-    def getStr(self, board: Board) -> str:
+    def getStr(self, board: "Board") -> str:
         """Return string notation format of vector
 
         :param board: Board to determine string position from
@@ -167,7 +172,7 @@ class ChessVector(object):
         notation += inverseIdx(self.row, board)
         return notation
 
-    def matches(self, otherVecs: List[ChessVector]) -> bool:
+    def matches(self, otherVecs: List["ChessVector"]) -> bool:
         """Check if vector matches any of other vectors
 
         :param otherVecs: List of other vectors
@@ -180,7 +185,7 @@ class ChessVector(object):
         else:
             return False
 
-    def copy(self) -> ChessVector:
+    def copy(self) -> "ChessVector":
         """Create a new copy of this vector
 
         :returns: Copy of this vector

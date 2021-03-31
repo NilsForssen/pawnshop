@@ -1,4 +1,2 @@
-tyring out another update on readme, this time in fron of the header
-# Chess
-
-updated readme
+# Pawnshop
+A simple chess library for python written solely as hobby project.
