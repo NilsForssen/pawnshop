@@ -1,16 +1,21 @@
+# ChessVector.py
+from Typing import Union, Tuple, List
 from .Utils import countAlpha, inverseIdx, toAlpha
+from .ChessBoard import Board
 
 
 class ChessVector(object):
-    def __init__(self, position, board=None):
-        """
-        Initialize Vector with optional col and row position.
-        Vector position can also be set later by changing col/row
-        or using setPos method with a position string.
+    """ChessVector object
 
-        DO NOT CHANGE VECTOR IN RUNTIME!
-        """
+    Object to store position on chessboard
+    Initialize object with position in (row, col) or string notation format
+    If a string notation format is given, the board must also be given
+    The vector supports common operations such as addition, multiplication with other vectors
 
+    :param position: Tuple or string notation position on chessboard
+    :param board: Board to use when determining position given by string notation (default is None)
+    """
+    def __init__(self, position: Union[Tuple[int, int], str], board=None):
         self._row = 0
         self._col = 0
 
@@ -142,23 +147,45 @@ class ChessVector(object):
     def __str__(self):
         return str((self.row, self.col))
 
-    def tuple(self):
+    def tuple(self) -> Tuple[int, int]:
+        """Return tuple format of vector
+
+        :returns: (row, col) tuple
+        :rType: ´´tuple´´
+        """
         return (self._row, self._col)
 
-    def getStr(self, board):
+    def getStr(self, board: Board) -> str:
+        """Return string notation format of vector
+
+        :param board: Board to determine string position from
+        :returns: string notation of vector position
+        :rType: ´´str´´
+        """
         notation = ""
         notation += toAlpha(self.col)
         notation += inverseIdx(self.row, board)
         return notation
 
-    def matches(self, otherVecs):
+    def matches(self, otherVecs: List[ChessVector]) -> bool:
+        """Check if vector matches any of other vectors
+
+        :param otherVecs: List of other vectors
+        :returns: If match is found or not
+        :rType: ´´bool´´
+        """
         for vec in otherVecs:
             if self.row == vec.row and self.col == vec.col:
                 return True
         else:
             return False
 
-    def copy(self):
+    def copy(self) -> ChessVector:
+        """Create a new copy of this vector
+
+        :returns: Copy of this vector
+        :rType: ´´ChessVector´´
+        """
         return ChessVector((self.row, self.col))
 
 

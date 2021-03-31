@@ -1,3 +1,5 @@
+# FourPlayerConfig.py
+
 from .Pieces import *
 from .Moves import *
 from .ChessVector import ChessVector

@@ -8,6 +8,7 @@ from .Piece import Piece
 
 
 def _catchOutofBounce(func):
+    """Decorator for catching out of bounce ´´IndexError´´"""
     def wrapper(*args, **kwargs):
         try:
             return func(*args, **kwargs)
@@ -16,10 +17,12 @@ def _catchOutofBounce(func):
     return wrapper
 
 
+
 def _positivePos(func):
-    def wrapper(pInstance, vector, bInstance):
+    """Decorator for ensuring a position is not negative"""
+    def wrapper(pInstance, vector, bInstance, *args, **kwargs):
         if not vector.row < 0 and not vector.col < 0:
-            return func(pInstance, vector, bInstance)
+            return func(pInstance, vector, bInstance, *args, **kwargs)
         else:
             return False
     return wrapper
@@ -137,3 +140,8 @@ def toAlpha(num: int) -> str:
     for n, notation in countAlpha():
         if num == n:
             return notation
+
+if __name__ == "__main__":
+    # Do some testing
+
+    pass
