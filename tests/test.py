@@ -128,7 +128,7 @@ move("d4", "e5")
 move("g8", "h6", ignoreCheck=True)
 
 try:
-    move("d8", "h8", ignoreCheck=True, ignoreOrder=True )
+    move("d8", "h8", ignoreCheck=True, ignoreOrder=True)
     raise UnsuccessfulTest
 except IllegalMove:
     print("Test Success")
