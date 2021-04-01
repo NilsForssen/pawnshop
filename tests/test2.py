@@ -1,3 +1,4 @@
-import pawnshop
+from pawnshop.ChessBoard import Board
+from pawnshop.Utils import toAlpha
 
-print(dir(pawnshop))
+print(Board)
