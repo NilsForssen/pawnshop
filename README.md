@@ -3,7 +3,7 @@ A simple chess package for python written solely as hobby project. I've also wri
 
 The package also includes a 4-player mode, although the ruleset is unchanged from the classic game, Checkmate -> Game Over!
 ## Background
-This is my first real project to scale (> 1000 lines of code) and the first to be published to PyPi (add link here).
+This is my first real project to scale (> 1000 lines of code) and the first to be published to [PyPi](https://pypi.org/project/pawnshop/).
 
 The project has certainly been a product of time with other hobby projects and school often taking priority. This along with multiple mid-project large scale refractorizations, reconsiderations and laziness should explain the unorganized codebase.
 
