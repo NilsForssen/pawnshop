@@ -9,7 +9,7 @@ from typing import Union, List, Dict, Generator
 from .ChessVector import ChessVector
 from .Pieces import *
 from .Moves import *
-from . import ClassicConfig, FourPlayerConfig
+from .configurations import ClassicConfig, FourPlayerConfig
 from .Utils import countAlpha
 from .Exceptions import *
 

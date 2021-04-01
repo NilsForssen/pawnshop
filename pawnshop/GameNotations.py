@@ -7,7 +7,7 @@ from .ChessBoard import (
     initClassic,
     Board
 )
-from . import ClassicConfig
+from .configurations import ClassicConfig
 from .ChessVector import ChessVector
 from .Pieces import *
 from .Utils import toAlpha
@@ -140,6 +140,10 @@ def FEN2Board(FENString: str) -> Board:
 def board2FEN(board: Board) -> str:
     """Get Forsyth-Edward-Notation from board
 
+    The notation does not account for:
+    current turn, castling potential, en-passant or move count
+    - only the position is notated (I am lazy)
+
     :param board: Board to get FEN from
     :returns: FEN string
     :rtype: ``str``
@@ -162,7 +166,7 @@ def board2FEN(board: Board) -> str:
 
         if empty:
             FENString += str(empty)
-        if not rowi == board.rows - 1:
+        if not rowi == board.getRows() - 1:
             FENString += "/"
 
     return FENString

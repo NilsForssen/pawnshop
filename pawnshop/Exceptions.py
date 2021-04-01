@@ -31,10 +31,6 @@ class PromotionError(Exception):
         super().__init__(msg)
 
 
-class UnsuccessfulTest(Exception):
-    pass
-
-
 class TurnError(Exception):
     def __init__(self, msg="Wrong player!"):
         super().__init__(msg)

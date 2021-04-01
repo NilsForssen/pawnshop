@@ -1,8 +1,8 @@
 # ClassicConfig.py
 
-from .Pieces import *
-from .ChessVector import ChessVector
-from .Moves import *
+from pawnshop.Pieces import *
+from pawnshop.ChessVector import ChessVector
+from pawnshop.Moves import *
 
 _colors = ("black", "white")
 _black, _white = _colors

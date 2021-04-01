@@ -5,17 +5,10 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="pawnshop",  # Replace with your own username
-<<<<<<< HEAD
-    version="0.0.1",
-    author="Nils Forssén",
-    author_email="forssennils@gmail.com",
-    description="Simple chess module",
-=======
-    version="0.0.3",
+    version="1.0.0",
     author="Nils Forssén",
     author_email="forssennils@gmail.com",
     description="A simple chess library as hobby project.",
->>>>>>> commenting
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/NilsForssen/pawnshop",
@@ -29,4 +22,9 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     python_requires='>=3.6',
+    extras_requires={
+        "dev": [
+            "pytest>=3.7",
+        ],
+    },
 )

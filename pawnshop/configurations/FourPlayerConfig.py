@@ -1,8 +1,8 @@
 # FourPlayerConfig.py
 
-from .Pieces import *
-from .Moves import *
-from .ChessVector import ChessVector
+from pawnshop.Pieces import *
+from pawnshop.Moves import *
+from pawnshop.ChessVector import ChessVector
 
 _colors = ("yellow", "green", "red", "blue")
 _yellow, _green, _red, _blue = _colors
