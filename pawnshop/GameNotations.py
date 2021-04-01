@@ -1,4 +1,4 @@
-# GameNotation.py
+# GameNotations.py
 
 import re
 from copy import deepcopy
@@ -38,7 +38,16 @@ OPTIONALTAGS = [
 ALLTAGS = [*STANDARDTAGS, *OPTIONALTAGS]
 
 
-def board2PGN(board, **tags):
+def board2PGN(board: Board, **tags) -> str:
+    """Get Portable Game Notation from board
+
+    :param board: Board to get notation from
+    :param **tags: Tags added to the notation
+    :returns: PGN string
+    :rtype: ``str``
+
+    :**tags: Tags found in STANDARDTAGS and OPTIONALTAGS
+    """
     PGNString = ""
     tags = {t.lower(): v for t, v in tags.items()}
 
@@ -53,7 +62,13 @@ def board2PGN(board, **tags):
     return PGNString
 
 
-def PGN2Board(PGNString):
+def PGN2Board(PGNString: str) -> Board:
+    """Get Board object from Portable Game Notation
+
+    :param PGNString: PGN string
+    :returns: Board object from PGN
+    :rtype: ``Board``
+    """
     notations = re.finditer(r"\s*(?P<castleQ>O-O-O)|(?P<castleK>O-O)|(?P<piece>[A-Z]*)(?P<pcol>[a-h]?)(?P<capture>[x]?)(?P<col>[a-h]+)(?P<rank>\d+)=?(?P<promote>[A-Z]?)\+*\#?", PGNString)
 
     board = initClassic()
@@ -86,7 +101,13 @@ def PGN2Board(PGNString):
     return board
 
 
-def FEN2Board(FENString):
+def FEN2Board(FENString: str) -> Board:
+    """Get Board object from Forsyth-Edwards-Notation
+
+    :param FENString: Forsyth-Edwards-Notation
+    :returns: Board object from FEN
+    :rtype: ``Board``
+    """
     board = Board()
     config = deepcopy(ClassicConfig.CONFIG)
     del config["pieces"]
@@ -116,7 +137,13 @@ def FEN2Board(FENString):
     return board
 
 
-def board2FEN(board):
+def board2FEN(board: Board) -> str:
+    """Get Forsyth-Edward-Notation from board
+
+    :param board: Board to get FEN from
+    :returns: FEN string
+    :rtype: ``str``
+    """
     FENString = ""
     for rowi, row in enumerate(board._board):
         empty = 0
@@ -141,7 +168,14 @@ def board2FEN(board):
     return FENString
 
 
-def readable(historyList, players=2):
+def readable(historyList: List[str], players=2) -> str:
+    """Get printable format of history
+
+    :param historyList: History to be read
+    :param players: How many players the history includes
+    :returns: Readable string of history
+    :rtype: ``str``
+    """
     finalString = ""
     i = 0
     while i * players < len(historyList):
