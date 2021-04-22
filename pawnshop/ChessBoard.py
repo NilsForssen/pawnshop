@@ -34,9 +34,6 @@ class Board():
 
     def __init__(self, config={}):
 
-        if not config:
-            self.ready = True
-
         self._board = []
         with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "configurations\\DefaultConfig.JSON"), "r") as default:
             dConfig = json.load(default)
@@ -183,6 +180,23 @@ class Board():
         :rtype: ``int``
         """
         return self._cols
+
+    def getHistory(self) -> list:
+        """Get history list of board
+
+        :returns: History of board
+        :rtype: ``list``
+        """
+        return self._history
+
+
+    def getTurnorder(self) -> list:
+        """Get turnorder list of board
+
+        :returns: Turnorder of board
+        :rtype: ``list``
+        """
+        return self._turnorder
 
     @_defaultColors
     def getChecks(self, *colors: str) -> Union[bool, Dict[str, bool]]:
