@@ -2,6 +2,7 @@
 
 from typing import List, Generator, TYPE_CHECKING
 from string import ascii_lowercase
+import sys, os
 
 if TYPE_CHECKING:
     from .ChessBoard import Board
@@ -140,6 +141,16 @@ def toAlpha(num: int) -> str:
     for n, notation in countAlpha():
         if num == n:
             return notation
+
+def getResourcePath(relative_path):
+    """
+    Get pyinstaller resource
+    """
+
+    if hasattr(sys, '_MEIPASS'):
+        return os.path.join(sys._MEIPASS, relative_path)
+
+    return os.path.join(os.path.abspath("."), relative_path)
 
 
 if __name__ == "__main__":
