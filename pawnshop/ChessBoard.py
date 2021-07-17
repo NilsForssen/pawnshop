@@ -35,7 +35,7 @@ class Board():
     def __init__(self, config={}):
 
         self._board = []
-        with open(getResourcePath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "configurations\\DefaultConfig.JSON")), "r") as default:
+        with open(getResourcePath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "configurations/DefaultConfig.JSON")), "r") as default:
             dConfig = json.load(default)
 
             self._rows = config.get("rows") or dConfig.get("rows")
